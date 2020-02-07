@@ -15,6 +15,7 @@ def main(
     cache_only: bool,
     dir_mode: bool,
     dir_flatten: bool,
+    precompute_cache: bool,
 ) -> None:
     input_path = os.path.relpath(input_path)
     output_path = os.path.relpath(output_path)
@@ -28,6 +29,16 @@ def main(
         return
 
     os.makedirs(output_path, exist_ok=True)
+
+    if precompute_cache:
+        pattern = re.compile(r".*\.java$")
+        for path, files in walk_files(input_path, pattern, progress=True):
+            file_paths = list(map(lambda f: os.path.join(path, f), files))
+            try:
+                JavaAst.cache_files(file_paths)
+            except Exception as e:
+                print(flush=True, end="")
+                print(e, flush=True)
 
     pattern = re.compile(r".*\.java$")
     for path, files in walk_files(input_path, pattern, progress=True):
@@ -56,6 +67,7 @@ if __name__ == "__main__":
     parser.add_argument("--cache-only", default=False, action="store_true")
     parser.add_argument("--dir", default=False, action="store_true")
     parser.add_argument("--flat", default=False, action="store_true")
+    parser.add_argument("--precompute-cache", default=False, action="store_true")
     args = parser.parse_args()
 
-    main(args.inp, args.out, args.cache_only, args.dir, args.flat)
+    main(args.inp, args.out, args.cache_only, args.dir, args.flat, args.precompute_cache)

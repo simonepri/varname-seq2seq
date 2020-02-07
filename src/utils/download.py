@@ -1,4 +1,4 @@
-import urllib
+import urllib.request as urllib
 from typing import *
 
 from tqdm import tqdm
@@ -16,8 +16,8 @@ def download_url(url: str, output_path: str, progress: bool = True) -> None:
         with DownloadProgressBar(
             unit="B", unit_scale=True, miniters=1, desc=url.split("/")[-1]
         ) as t:
-            urllib.request.urlretrieve(
+            urllib.urlretrieve(
                 url, filename=output_path, reporthook=t.update_to
             )
         return
-    urllib.request.urlretrieve(url, filename=output_path)
+    urllib.urlretrieve(url, filename=output_path)

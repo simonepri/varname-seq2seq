@@ -53,8 +53,9 @@ class JavaAst:
     )
     AST_CACHE_DIR = os.getenv("AST_CACHE_DIR", ".cache/java_ast")
     AST_EXTRACTOR_DIR = os.path.join(AST_CACHE_DIR, "bin")
-    AST_EXTRACTOR_PATH = os.path.join(
-        AST_EXTRACTOR_DIR, "features-javac-extractor.jar"
+    AST_EXTRACTOR_PATH = os.getenv(
+        "AST_EXTRACTOR_PATH",
+        os.path.join(AST_EXTRACTOR_DIR, "features-javac-extractor.jar"),
     )
     AST_PROTO_DIR = os.path.join(AST_CACHE_DIR, "proto")
 

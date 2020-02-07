@@ -52,11 +52,15 @@ class JavaLocalVarExamples:
     def from_source_file(source_file: str) -> "JavaLocalVarExamples":
         ast = JavaAst(source_file)
 
-        # Map local variables to a numeric id
+        # Get methods
+        methods_nodes = list(ast.get_nodes(
+            types=NODE_ELEMENT_TYPES, content="METHOD"
+        ))
+
+        # Map local variables and parameters to a numeric id
         var_map = defaultdict(int)
         var_num = 0
         var_nodes = ast.get_nodes(types=NODE_VAR_TYPES)
-        body_nodes = list(ast.get_nodes(types=NODE_FAKE_TYPES, content="BODY"))
         memb_nodes = list(
             ast.get_nodes(types=NODE_ELEMENT_TYPES, content="MEMBER_SELECT")
         )
@@ -69,16 +73,16 @@ class JavaLocalVarExamples:
             for idt_node in idt_nodes:
                 # TODO: do each query in log(n)
                 if not any(
-                    idt_node.pos[0] >= body_node.pos[0]
-                    and idt_node.pos[1] <= body_node.pos[1]
-                    for body_node in body_nodes
+                    idt_node.pos[0] >= method_node.pos[0]
+                    and idt_node.pos[1] <= method_node.pos[1]
+                    for method_node in methods_nodes
                 ) or any(
                     idt_node.pos[0] >= memb_node.pos[0]
                     and idt_node.pos[1] <= memb_node.pos[1]
                     for memb_node in memb_nodes
                 ):
-                    # Ignore variables that appear outside the body or as class
-                    # fields.
+                    # Ignore identifiers that appear outside the method or as
+                    # class fields.
                     skip = True
                     break
             if skip:
@@ -87,13 +91,10 @@ class JavaLocalVarExamples:
             for idt_node in idt_nodes:
                 var_map[idt_node.pos[0]] = var_num + 1
             var_num += 1
-        del body_nodes, memb_nodes
+        del memb_nodes
 
         # Create one example for each method
         examples = []
-        methods_nodes = ast.get_nodes(
-            types=NODE_ELEMENT_TYPES, content="METHOD"
-        )
         for method_node in methods_nodes:
             token_nodes = list(
                 ast.get_nodes(types=NODE_TOKEN_TYPES, pos=method_node.pos)

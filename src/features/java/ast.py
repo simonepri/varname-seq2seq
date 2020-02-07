@@ -12,8 +12,6 @@ from proto.graph_pb2 import FeatureEdge as JavaAstEdgeType
 from utils.files import walk_files
 from utils.download import download_url
 
-import requests
-
 
 class JavaAstNode:
     def __init__(

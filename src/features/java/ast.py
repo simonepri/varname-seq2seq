@@ -217,8 +217,10 @@ class JavaAst:
             javac_path,
             "-cp",
             jar_path,
+            "-Xmaxerrs",
+            "10000000",
             "-Xplugin:FeaturePlugin",
-            " ".join(file_paths),
+            *file_paths,
         ]
         try:
             check_call(cmd, stdout=DEVNULL, stderr=STDOUT)

@@ -12,9 +12,9 @@ from utils.files import walk_files
 def main(
     input_path: str,
     output_path: str,
+    cache_only: bool,
     dir_mode: bool,
     dir_flatten: bool,
-    cache_only: bool,
 ) -> None:
     input_path = os.path.relpath(input_path)
     output_path = os.path.relpath(output_path)
@@ -53,9 +53,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--inp", type=str)
     parser.add_argument("--out", type=str)
+    parser.add_argument("--cache-only", default=False, action="store_true")
     parser.add_argument("--dir", default=False, action="store_true")
     parser.add_argument("--flat", default=False, action="store_true")
-    parser.add_argument("--cache", default=False, action="store_true")
     args = parser.parse_args()
 
-    main(args.inp, args.out, args.dir, args.flat, args.cache)
+    main(args.inp, args.out, args.cache_only, args.dir, args.flat)

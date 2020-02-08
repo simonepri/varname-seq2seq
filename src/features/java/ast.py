@@ -16,13 +16,13 @@ from utils.download import download_url
 class JavaAstNode:
     def __init__(
         self, idx: int, type: int, content: str, startPos: int, endPos: int
-    ):
+    ) -> None:
         self.idx = idx
         self.type = type
         self.content = content
         self.pos = (startPos, endPos)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(
             {
                 "idx": self.idx,
@@ -36,11 +36,11 @@ class JavaAstNode:
 class JavaAstEdge:
     def __init__(
         self, source: JavaAstNode, type: int, destination: JavaAstNode
-    ):
+    ) -> None:
         self.type = type
         self.nodes = (source, destination)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str((self.nodes[0].idx, self.type, self.nodes[1].idx))
 
 
@@ -59,7 +59,7 @@ class JavaAst:
     )
     AST_PROTO_DIR = os.path.join(AST_CACHE_DIR, "proto")
 
-    def __init__(self, source_file_path: str):
+    def __init__(self, source_file_path: str) -> None:
         if not JavaAst.SETUP:
             raise Exception(
                 "The AST Parser is not initalized. "
@@ -162,7 +162,7 @@ class JavaAst:
         cls.SETUP = True
 
     @classmethod
-    def cache_files(cls, file_paths: List[str]):
+    def cache_files(cls, file_paths: List[str]) -> None:
         """Use the javac compiler and features extration plugin to extract the
         ASTs.
         """

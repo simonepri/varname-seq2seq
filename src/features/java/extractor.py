@@ -23,7 +23,7 @@ class JavaLocalVarExamples:
     def __init__(self, examples: List[Tuple[List[str], List[int]]]):
         self.examples = examples
 
-    def save(self, file_path: str):
+    def save(self, file_path: str) -> None:
         with open(file_path, "w+") as f:
             for tokens, masks in self.examples:
                 example_builder = []
@@ -34,7 +34,7 @@ class JavaLocalVarExamples:
                 print(example_str, file=f)
 
     @staticmethod
-    def load(file_path: str):
+    def load(file_path: str) -> None:
         examples = []
         with open(file_path, "r+") as f:
             tokens, masks = [], []
@@ -106,11 +106,11 @@ class JavaLocalVarExamples:
         return JavaLocalVarExamples(examples)
 
     @classmethod
-    def __encode_token(cls, token: str):
+    def __encode_token(cls, token: str) -> str:
         map = {"\n": r"\n", "\r": r"\r", "\t": r"\t"}
         return multiple_replace(map, token)
 
     @classmethod
-    def __decode_token(cls, token: str):
+    def __decode_token(cls, token: str) -> str:
         map = {r"\n": "\n", r"\r": "\r", r"\t": "\t"}
         return multiple_replace(map, token)

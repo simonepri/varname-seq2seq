@@ -9,7 +9,7 @@ from features.java.extractor import JavaLocalVarExamples
 from utils.files import walk_files, split_file_path
 
 
-def validate_args(args):
+def validate_args(args: Dict[str, Any]) -> None:
     if args.dir_mode and os.path.isfile(args.input_path):
         raise ValueError(
             "In dir mode the input path must be a folder but a file was given: %s"
@@ -22,7 +22,7 @@ def validate_args(args):
         )
 
 
-def normalize_args(args):
+def normalize_args(args: Dict[str, Any]) -> None:
     args.input_path = os.path.realpath(args.input_path)
     args.output_path = os.path.realpath(args.output_path)
 

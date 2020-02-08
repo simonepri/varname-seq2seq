@@ -13,7 +13,7 @@ def multiple_replace(dict: Dict[str, str], text: str) -> str:
     return regex.sub(lambda mo: dict[mo.string[mo.start() : mo.end()]], text)
 
 
-def truncate(text: str, length: int, ellipsis: Optional[str] = None):
+def truncate(text: str, length: int, ellipsis: Optional[str] = None) -> str:
     if length < 0:
         if ellipsis is None:
             return text[length:]

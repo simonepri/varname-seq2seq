@@ -220,7 +220,7 @@ class JavaAst:
             "-Xmaxerrs",
             "10000000",
             "-Xplugin:FeaturePlugin",
-            *file_paths,
+            *map(lambda f: os.path.relpath(f), file_paths)
         ]
         try:
             check_call(cmd, stdout=DEVNULL, stderr=STDOUT)

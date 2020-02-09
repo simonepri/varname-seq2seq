@@ -33,9 +33,9 @@ def main(
 
     remote_path = (
         "https://github.com/simonepri/varname-transformers"
-        + "/releases/download/0.0.1/examples.tgz"
+        + "/releases/download/0.0.1/corpora-examples.tgz"
     )
-    destination_path = os.path.join(args.examples_path, "examples.tgz")
+    destination_path = os.path.join(args.examples_path, "corpora-examples.tgz")
     download_url(remote_path, destination_path, progress=True)
 
     with tarfile.open(destination_path, "r:gz") as tar:

@@ -199,7 +199,7 @@ class JavaAst:
 
     @classmethod
     def __cache_path_for_file(cls, file_path: str) -> str:
-        slug = os.path.realpath(file_path).replace(os.sep, ":")
+        slug = os.path.relpath(file_path).replace(os.sep, ":")
         return os.path.join(cls.AST_PROTO_DIR, slug + ".proto")
 
     @classmethod

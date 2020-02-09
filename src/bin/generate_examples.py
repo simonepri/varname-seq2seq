@@ -10,14 +10,14 @@ from utils.files import walk_files, split_file_path
 
 
 def validate_args(args: Dict[str, Any]) -> None:
-    if args.dir_mode and os.path.isfile(args.input_path):
+    if args.dir_mode and not os.path.isdir(args.input_path):
         raise ValueError(
-            "In dir mode the input path must be a folder but a file was given: %s"
+            "In dir mode the input path must be a folder but it is not: %s"
             % args.input_path
         )
-    if not args.dir_mode and os.path.isdir(args.input_path):
+    if not args.dir_mode and not os.path.isfile(args.input_path):
         raise ValueError(
-            "The input path must be a file but a folder was given: %s"
+            "The input path must be a file but it is not: %s"
             % args.input_path
         )
 

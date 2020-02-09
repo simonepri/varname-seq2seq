@@ -17,7 +17,9 @@ def validate_args(args: Dict[str, Any]) -> None:
                 "The cache path must be a folder: %s" % args.cache_path
             )
         elif os.listdir(args.cache_path):
-            raise ValueError("The cache path is not empty: %s" % args.cache_path)
+            raise ValueError(
+                "The cache path is not empty: %s" % args.cache_path
+            )
 
 
 def normalize_args(args: Dict[str, Any]) -> None:

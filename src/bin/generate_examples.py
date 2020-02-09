@@ -17,8 +17,7 @@ def validate_args(args: Dict[str, Any]) -> None:
         )
     if args.file_mode and not os.path.isfile(args.input_path):
         raise ValueError(
-            "The input path must be a file but it is not: %s"
-            % args.input_path
+            "The input path must be a file but it is not: %s" % args.input_path
         )
 
 
@@ -82,7 +81,9 @@ if __name__ == "__main__":
     parser.add_argument("--output-path", type=str, default="data/examples")
     parser.add_argument("--cache-only", default=False, action="store_true")
     parser.add_argument("--file-mode", default=False, action="store_true")
-    parser.add_argument("--no-dir-flattening", default=False, action="store_true")
+    parser.add_argument(
+        "--no-dir-flattening", default=False, action="store_true"
+    )
     args = parser.parse_args()
 
     validate_args(args)

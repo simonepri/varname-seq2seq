@@ -12,13 +12,11 @@ from utils.files import walk_files, split_file_path
 def validate_args(args: Dict[str, Any]) -> None:
     if not os.path.exists(args.data_path):
         raise ValueError(
-            "The data path provided does not exist: %s"
-            % args.data_path
+            "The data path provided does not exist: %s" % args.data_path
         )
     if not os.path.isdir(args.data_path):
         raise ValueError(
-            "The data path provided is not a folder: %s"
-            % args.data_path
+            "The data path provided is not a folder: %s" % args.data_path
         )
 
 

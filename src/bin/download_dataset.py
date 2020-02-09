@@ -17,7 +17,7 @@ def validate_args(args: Dict[str, Any]) -> None:
                 "The data path must be a folder: %s" % args.data_path
             )
         elif os.listdir(args.data_path):
-            raise ValueError("The data path is not empt: %s" % args.data_path)
+            raise ValueError("The data path is not empty: %s" % args.data_path)
 
 
 def normalize_args(args: Dict[str, Any]) -> None:

@@ -31,7 +31,7 @@ def main(
 
     remote_path = (
         "https://github.com/simonepri/varname-transformers"
-        + "/releases/download/0.0.1/data.tgz"
+        + "/releases/download/0.0.1/corpora-sources.tgz"
     )
     destination_path = os.path.join(args.data_path, "corpora-sources.tgz")
     download_url(remote_path, destination_path, progress=True)

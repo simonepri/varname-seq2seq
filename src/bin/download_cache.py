@@ -32,9 +32,9 @@ def main(
 
     remote_path = (
         "https://github.com/simonepri/varname-transformers"
-        + "/releases/download/0.0.1/corpus-ast-cache.tgz"
+        + "/releases/download/0.0.1/corpora-ast-cache.tgz"
     )
-    destination_path = os.path.join(args.cache_path, "corpus-ast-cache.tgz")
+    destination_path = os.path.join(args.cache_path, "corpora-ast-cache.tgz")
     download_url(remote_path, destination_path, progress=True)
 
     with tarfile.open(destination_path, "r:gz") as tar:
@@ -63,7 +63,7 @@ def main(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data-path", type=str, default="data")
+    parser.add_argument("--data-path", type=str, default="data/corpora")
     parser.add_argument("--remove-prefix", type=str, default=":data:")
     parser.add_argument(
         "--cache-path", type=str, default=".cache/java_ast/proto"

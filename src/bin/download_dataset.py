@@ -33,7 +33,7 @@ def main(
         "https://github.com/simonepri/varname-transformers"
         + "/releases/download/0.0.1/data.tgz"
     )
-    destination_path = os.path.join(args.data_path, "corpus-sources.tgz")
+    destination_path = os.path.join(args.data_path, "corpora-sources.tgz")
     download_url(remote_path, destination_path, progress=True)
 
     with tarfile.open(destination_path, "r:gz") as tar:
@@ -47,7 +47,7 @@ def main(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data-path", type=str, default="data")
+    parser.add_argument("--data-path", type=str, default="data/corpora")
     args = parser.parse_args()
 
     validate_args(args)

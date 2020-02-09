@@ -78,8 +78,8 @@ def main(args: Dict[str, Any]) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input-path", type=str)
-    parser.add_argument("--output-path", type=str)
+    parser.add_argument("--input-path", type=str, default="data/corpora")
+    parser.add_argument("--output-path", type=str, default="data/examples")
     parser.add_argument("--cache-only", default=False, action="store_true")
     parser.add_argument("--dir-mode", default=False, action="store_true")
     parser.add_argument("--dir-flattening", default=False, action="store_true")

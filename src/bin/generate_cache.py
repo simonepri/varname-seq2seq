@@ -41,7 +41,7 @@ def main(args: Dict[str, Any]) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data-path", type=str)
+    parser.add_argument("--data-path", type=str, default="data/corpora")
     args = parser.parse_args()
 
     validate_args(args)

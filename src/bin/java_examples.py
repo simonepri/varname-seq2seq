@@ -59,18 +59,6 @@ def get_data(
 def main(args: Dict[str, Any]) -> None:
     JavaAst.setup(progress=True)
 
-    if args.bulk_cache:
-        for (in_path, in_files), _ in get_data(args, progress=True):
-            file_paths = list(map(lambda f: os.path.join(in_path, f), in_files))
-            try:
-                JavaAst.cache_files(file_paths)
-            except Exception as e:
-                print(flush=True, end="")
-                print(e, flush=True)
-
-    if args.skip_generation:
-        return
-
     for input, output in get_data(args, progress=True):
         (in_path, in_files), (out_path, out_files) = input, output
         for in_file, out_file in zip(in_files, out_files):
@@ -95,8 +83,6 @@ if __name__ == "__main__":
     parser.add_argument("--cache-only", default=False, action="store_true")
     parser.add_argument("--dir-mode", default=False, action="store_true")
     parser.add_argument("--dir-flattening", default=False, action="store_true")
-    parser.add_argument("--bulk-cache", default=False, action="store_true")
-    parser.add_argument("--skip-generation", default=False, action="store_true")
     args = parser.parse_args()
 
     validate_args(args)

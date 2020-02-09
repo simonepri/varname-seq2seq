@@ -10,12 +10,12 @@ from utils.files import walk_files, split_file_path
 
 
 def validate_args(args: Dict[str, Any]) -> None:
-    if args.dir_mode and not os.path.isdir(args.input_path):
+    if not args.file_mode and not os.path.isdir(args.input_path):
         raise ValueError(
             "In dir mode the input path must be a folder but it is not: %s"
             % args.input_path
         )
-    if not args.dir_mode and not os.path.isfile(args.input_path):
+    if args.file_mode and not os.path.isfile(args.input_path):
         raise ValueError(
             "The input path must be a file but it is not: %s"
             % args.input_path
@@ -30,7 +30,7 @@ def normalize_args(args: Dict[str, Any]) -> None:
 def get_data(
     args: Dict[str, Any], progress: bool = True
 ) -> Iterable[Tuple[Tuple[str, List[str]], Tuple[str, List[str]]]]:
-    if not args.dir_mode:
+    if args.file_mode:
         in_dir_path, in_file = split_file_path(args.input_path)
         out_dir_path, out_file = split_file_path(args.output_path)
         yield (in_dir_path, [in_file]), (out_dir_path, [out_file])
@@ -45,11 +45,11 @@ def get_data(
         in_rel_dir_flat = in_rel_dir_path.replace(os.sep, ":")
 
         out_dir_path = out_dir
-        if not args.dir_flattening and in_rel_dir_path != ".":
+        if args.no_dir_flattening and in_rel_dir_path != ".":
             out_dir_path = os.path.join(out_dir_path, in_rel_dir_path)
         for in_file in files:
             out_file = in_file + ".eg.tsv"
-            if args.dir_flattening and in_rel_dir_path != ".":
+            if not args.no_dir_flattening and in_rel_dir_path != ".":
                 out_file = in_rel_dir_flat + ":" + out_file
             in_files.append(in_file)
             out_files.append(out_file)
@@ -81,8 +81,8 @@ if __name__ == "__main__":
     parser.add_argument("--input-path", type=str, default="data/corpora")
     parser.add_argument("--output-path", type=str, default="data/examples")
     parser.add_argument("--cache-only", default=False, action="store_true")
-    parser.add_argument("--dir-mode", default=False, action="store_true")
-    parser.add_argument("--dir-flattening", default=False, action="store_true")
+    parser.add_argument("--file-mode", default=False, action="store_true")
+    parser.add_argument("--no-dir-flattening", default=False, action="store_true")
     args = parser.parse_args()
 
     validate_args(args)

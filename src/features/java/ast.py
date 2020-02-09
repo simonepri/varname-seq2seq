@@ -183,14 +183,14 @@ class JavaAst:
             if not os.path.isfile(gen_proto_file_path):
                 missing_files.append(file_path)
                 continue
-            proto_file_path = cls.__cache_path_for_file(file_path)
+            proto_file_path = cls.cache_path_for_file(file_path)
             os.rename(gen_proto_file_path, proto_file_path)
         if len(missing_files) > 0:
             raise IOError("Files not cached: %s" % missing_files)
 
     @classmethod
     def file_cached(cls, file_path: str) -> bool:
-        proto_file_path = cls.__cache_path_for_file(file_path)
+        proto_file_path = cls.cache_path_for_file(file_path)
         if not os.path.isfile(proto_file_path):
             return False
         if os.path.getmtime(proto_file_path) < os.path.getmtime(file_path):
@@ -198,14 +198,14 @@ class JavaAst:
         return True
 
     @classmethod
-    def __cache_path_for_file(cls, file_path: str) -> str:
+    def cache_path_for_file(cls, file_path: str) -> str:
         slug = os.path.relpath(file_path).replace(os.sep, ":")
         return os.path.join(cls.AST_PROTO_DIR, slug + ".proto")
 
     @classmethod
     def __get_proto(cls, file_path: str) -> str:
         cls.cache_files([file_path])
-        proto_file_path = cls.__cache_path_for_file(file_path)
+        proto_file_path = cls.cache_path_for_file(file_path)
         with open(proto_file_path, "rb") as f:
             return f.read()
 

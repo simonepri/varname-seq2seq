@@ -78,7 +78,7 @@ class TokenizedVarExample:
     def __len__(self) -> int:
         return len(self.multi_tokens)
 
-    def tlen(self) -> int:
+    def size(self) -> int:
         if self.tlen is not None:
             return self.tlen
         self.tlen = 0

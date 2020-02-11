@@ -33,8 +33,9 @@ def normalize_args(args: Dict[str, Any]) -> None:
 
 def main(args: Dict[str, Any]) -> None:
     pattern = re.compile(r".*\.eg.tk.tsv$")
-    for file in os.listdir(args.input_path):
-        proj_base = os.path.join(args.input_path, file)
+
+    for proj in os.listdir(args.input_path):
+        proj_base = os.path.join(args.input_path, proj)
         if not os.path.isdir(proj_base):
             continue
 

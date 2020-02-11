@@ -18,6 +18,7 @@ protobuf = "*"
 tqdm = "*"
 transformers = "*"
 torch = "*"
+numpy = "*"
 
 [requires]
 python_version = "3"

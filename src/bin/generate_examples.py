@@ -7,19 +7,24 @@ from typing import *
 from common.var_example import VarExample
 from features.java.ast import JavaAst
 from features.java.extractor import JavaVarExamplesExtractor
-from utils.files import walk_files, split_file_path
+from utils.files import walk_files, rebase_path, split_file_path
 
 
 def validate_args(args: Dict[str, Any]) -> None:
-    if not args.file_mode and not os.path.isdir(args.input_path):
+    if not os.path.isdir(args.input_path):
         raise ValueError(
-            "In dir mode the input path must be a folder but it is not: %s"
+            "The input path must be a folder but it is not: %s"
             % args.input_path
         )
-    if args.file_mode and not os.path.isfile(args.input_path):
-        raise ValueError(
-            "The input path must be a file but it is not: %s" % args.input_path
-        )
+    if os.path.exists(args.output_path):
+        if not os.path.isdir(args.output_path):
+            raise ValueError(
+                "The output path must be a folder: %s" % args.output_path
+            )
+        elif os.listdir(args.output_path):
+            raise ValueError(
+                "The output path is not empty: %s" % args.output_path
+            )
 
 
 def normalize_args(args: Dict[str, Any]) -> None:
@@ -27,53 +32,27 @@ def normalize_args(args: Dict[str, Any]) -> None:
     args.output_path = os.path.realpath(args.output_path)
 
 
-def get_data(
-    args: Dict[str, Any], progress: bool = True
-) -> Iterable[Tuple[Tuple[str, List[str]], Tuple[str, List[str]]]]:
-    if args.file_mode:
-        in_dir_path, in_file = split_file_path(args.input_path)
-        out_dir_path, out_file = split_file_path(args.output_path)
-        yield (in_dir_path, [in_file]), (out_dir_path, [out_file])
-        return
-
-    in_dir, out_dir = args.input_path, args.output_path
-    pattern = re.compile(r".*\.java$")
-    for in_dir_path, files in walk_files(in_dir, pattern, progress=progress):
-        in_files, out_files = [], []
-
-        in_rel_dir_path = os.path.relpath(in_dir_path, in_dir)
-        in_rel_dir_flat = in_rel_dir_path.replace(os.sep, ":")
-
-        out_dir_path = out_dir
-        if args.no_dir_flattening and in_rel_dir_path != ".":
-            out_dir_path = os.path.join(out_dir_path, in_rel_dir_path)
-        for in_file in files:
-            out_file = in_file + ".eg.tsv"
-            if not args.no_dir_flattening and in_rel_dir_path != ".":
-                out_file = in_rel_dir_flat + ":" + out_file
-            in_files.append(in_file)
-            out_files.append(out_file)
-        yield (in_dir_path, in_files), (out_dir_path, out_files)
-
-
 def main(args: Dict[str, Any]) -> None:
     JavaAst.setup(progress=True)
 
-    for input, output in get_data(args, progress=True):
-        (in_path, in_files), (out_path, out_files) = input, output
-        for in_file, out_file in zip(in_files, out_files):
-            in_file_path = os.path.join(in_path, in_file)
-            if args.cache_only and not JavaAst.file_cached(in_file_path):
+    pattern = re.compile(r".*\.java$")
+    for path, files in walk_files(
+        args.input_path, pattern, progress=True, batch=100
+    ):
+        out_path = rebase_path(args.input_path, args.output_path, path)
+        os.makedirs(out_path, exist_ok=True)
+        for file in files:
+            file_path = os.path.join(path, file)
+            if args.cache_only and not JavaAst.file_cached(file_path):
                 continue
             try:
-                examples = JavaVarExamplesExtractor.from_source_file(
-                    in_file_path
-                )
+                examples = JavaVarExamplesExtractor.from_source_file(file_path)
             except Exception as e:
-                print(flush=True, end="")
+                print(end="", flush=True)
                 print(e, flush=True)
                 continue
-            os.makedirs(out_path, exist_ok=True)
+
+            out_file = file + ".eg.tsv"
             out_file_path = os.path.join(out_path, out_file)
             VarExample.serialize_to_file(out_file_path, examples)
 
@@ -83,12 +62,8 @@ if __name__ == "__main__":
     parser.add_argument("--input-path", type=str, default="data/corpora")
     parser.add_argument("--output-path", type=str, default="data/examples")
     parser.add_argument("--cache-only", default=False, action="store_true")
-    parser.add_argument("--file-mode", default=False, action="store_true")
-    parser.add_argument(
-        "--no-dir-flattening", default=False, action="store_true"
-    )
     args = parser.parse_args()
 
-    validate_args(args)
     normalize_args(args)
+    validate_args(args)
     main(args)

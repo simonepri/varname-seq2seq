@@ -6,7 +6,7 @@ from typing import *
 
 from features.java.ast import JavaAst
 from features.java.extractor import JavaLocalVarExamples
-from utils.files import walk_files, split_file_path
+from utils.files import walk_files
 
 
 def validate_args(args: Dict[str, Any]) -> None:

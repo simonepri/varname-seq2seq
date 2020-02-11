@@ -7,7 +7,7 @@ from typing import *
 from common.var_example import VarExample
 from features.java.ast import JavaAst
 from features.java.extractor import JavaVarExamplesExtractor
-from utils.files import walk_files, rebase_path, split_file_path
+from utils.files import walk_files, rebase_path
 
 
 def validate_args(args: Dict[str, Any]) -> None:

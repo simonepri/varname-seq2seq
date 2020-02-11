@@ -34,11 +34,6 @@ def walk_files(
             pbar.update(len(files))
 
 
-def split_file_path(path: str) -> Tuple[str, str]:
-    dir = os.path.dirname(path)
-    return dir, os.path.relpath(path, dir)
-
-
 def rebase_path(
     input_base: str,
     output_base: str,

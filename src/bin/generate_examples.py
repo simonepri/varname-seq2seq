@@ -4,8 +4,9 @@ import os
 import re
 from typing import *
 
+from common.var_example import VarExample
 from features.java.ast import JavaAst
-from features.java.extractor import JavaLocalVarExamples
+from features.java.extractor import JavaVarExamplesExtractor
 from utils.files import walk_files, split_file_path
 
 
@@ -65,14 +66,16 @@ def main(args: Dict[str, Any]) -> None:
             if args.cache_only and not JavaAst.file_cached(in_file_path):
                 continue
             try:
-                examples = JavaLocalVarExamples.from_source_file(in_file_path)
+                examples = JavaVarExamplesExtractor.from_source_file(
+                    in_file_path
+                )
             except Exception as e:
                 print(flush=True, end="")
                 print(e, flush=True)
                 continue
             os.makedirs(out_path, exist_ok=True)
             out_file_path = os.path.join(out_path, out_file)
-            examples.save(out_file_path)
+            VarExample.serialize_to_file(out_file_path, examples)
 
 
 if __name__ == "__main__":

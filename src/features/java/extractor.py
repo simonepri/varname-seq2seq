@@ -1,8 +1,7 @@
-import re
 from collections import defaultdict
 from typing import *
 
-from utils.strings import multiple_replace
+from common.var_example import VarExample
 from features.java.ast import (
     JavaAst,
     JavaAstNode,
@@ -19,43 +18,15 @@ EDGE_CHILD_TYPES = [JavaAstEdgeType.AST_CHILD]
 EDGE_ASYM_TYPES = [JavaAstEdgeType.ASSOCIATED_SYMBOL]
 
 
-class JavaLocalVarExamples:
-    def __init__(self, examples: List[Tuple[List[str], List[int]]]):
-        self.examples = examples
-
-    def save(self, file_path: str) -> None:
-        with open(file_path, "w+") as f:
-            for tokens, masks in self.examples:
-                example_builder = []
-                for token, varid in zip(tokens, masks):
-                    token = self.__encode_token(token)
-                    example_builder.append("%s:%d" % (token, varid))
-                example_str = "\t".join(example_builder)
-                print(example_str, file=f)
-
+class JavaVarExamplesExtractor:
     @staticmethod
-    def load(file_path: str) -> None:
-        examples = []
-        with open(file_path, "r+") as f:
-            tokens, masks = [], []
-            for line in f:
-                parts = line.split("\t")
-                for part in parts:
-                    token, _, varid = part.rpartition(":")
-                    token = self.__decode_token(token)
-                    tokens.append(token)
-                    masks.append(varid)
-            examples.append((tokens, masks))
-        return JavaLocalVarExamples(examples)
-
-    @staticmethod
-    def from_source_file(source_file: str) -> "JavaLocalVarExamples":
+    def from_source_file(source_file: str) -> List[VarExample]:
         ast = JavaAst(source_file)
 
         # Get methods
-        methods_nodes = list(ast.get_nodes(
-            types=NODE_ELEMENT_TYPES, content="METHOD"
-        ))
+        methods_nodes = list(
+            ast.get_nodes(types=NODE_ELEMENT_TYPES, content="METHOD")
+        )
 
         # Map local variables and parameters to a numeric id
         var_map = defaultdict(int)
@@ -101,16 +72,6 @@ class JavaLocalVarExamples:
             )
             tokens = list(map(lambda n: n.content, token_nodes))
             mask = list(map(lambda n: var_map[n.pos[0]], token_nodes))
-            examples.append((tokens, mask))
+            examples.append(VarExample(tokens, mask))
 
-        return JavaLocalVarExamples(examples)
-
-    @classmethod
-    def __encode_token(cls, token: str) -> str:
-        map = {"\n": r"\n", "\r": r"\r", "\t": r"\t"}
-        return multiple_replace(map, token)
-
-    @classmethod
-    def __decode_token(cls, token: str) -> str:
-        map = {r"\n": "\n", r"\r": "\r", r"\t": "\t"}
-        return multiple_replace(map, token)
+        return examples

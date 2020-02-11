@@ -16,6 +16,8 @@ autopep8 = "*"
 [packages]
 protobuf = "*"
 tqdm = "*"
+transformers = "*"
+torch = "*"
 
 [requires]
 python_version = "3"

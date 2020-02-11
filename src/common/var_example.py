@@ -27,10 +27,11 @@ class VarExample:
     @classmethod
     def deserialize(cls, text: str) -> "VarExample":
         tokens, masks = [], []
-        parts = line.split("\t")
+        parts = text.split("\t")
         for part in parts:
             token, _, varid = part.rpartition(":")
             token = cls.__decode_token(token)
+            varid = int(varid)
             tokens.append(token)
             masks.append(varid)
         return cls(tokens, masks)

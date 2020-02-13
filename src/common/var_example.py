@@ -79,7 +79,7 @@ class TokenizedVarExample:
         return len(self.multi_tokens)
 
     def size(self) -> int:
-        if self.tlen is not None:
+        if hasattr(self, 'tlen'):
             return self.tlen
         self.tlen = 0
         for multi_token in self.multi_tokens:

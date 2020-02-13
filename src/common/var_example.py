@@ -48,6 +48,7 @@ class VarExample(Serializable):
         if hasattr(self, "vars"):
             return self.vars
         self.vars = set(self.masks)
+        self.vars.remove(0)
         return self.vars
 
     @classmethod
@@ -70,6 +71,7 @@ class VarExample(Serializable):
             tokens.append(token)
             masks.append(varid)
             vars.add(varid)
+        vars.remove(0)
         example = cls(tokens, masks)
         example.vars = vars
         return example

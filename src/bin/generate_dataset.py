@@ -1,7 +1,9 @@
 #!/usr/group/env python3
 import argparse
+import re
 import os
 from typing import *
+from collections import defaultdict
 
 import numpy as np
 
@@ -21,8 +23,6 @@ def validate_args(args: Dict[str, Any]) -> None:
             raise ValueError(
                 "The output path is not empty: %s" % args.output_path
             )
-    if args.max_len < 1:
-        raise ValueError("The max len must be positive: %d" % args.max_len)
     if (
         len(args.splits) != 3
         or any(s < 0 or s > 100 for s in args.splits)
@@ -46,26 +46,26 @@ def main(args: Dict[str, Any]) -> None:
 
     dataset_names = ["train", "dev", "test"]
     dataset_file = {}
-    dataset_stats = {}
+    dataset_stats = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
     for dataset_name in dataset_names:
-        dataset_path = os.path.join(
-            args.output_path, dataset_name + ".eg.tk.tsv"
-        )
+        dataset_path = os.path.join(args.output_path, dataset_name + ".mk.tsv")
         dataset_file[dataset_name] = open(dataset_path, "w+")
-        dataset_stats[dataset_name] = {}
 
-    group_name = 1
-    while group_name <= args.max_len:
-        for proj in os.listdir(args.input_path):
-            proj_base = os.path.join(args.input_path, proj)
-            if not os.path.isdir(proj_base):
+    group_info = re.compile(r".*m_(\d+)\.t_(\d+)\.mk\.gp\.tsv")
+    for proj in os.listdir(args.input_path):
+        proj_base = os.path.join(args.input_path, proj)
+        if not os.path.isdir(proj_base):
+            continue
+        for group in os.listdir(proj_base):
+            group_path = os.path.join(proj_base, group)
+            if not os.path.isfile(group_path):
                 continue
-            file_path = os.path.join(
-                proj_base, "%d.group.eg.tk.tsv" % group_name
-            )
-            if not os.path.exists(file_path):
+            match = group_info.match(group_path)
+            if match is None:
                 continue
-            with open(file_path, "r") as file:
+            ml, tl = match.groups()
+            ml, tl = int(ml), int(tl)
+            with open(group_path, "r") as file:
                 nlines = sum(1 for line in file)
                 indices = np.arange(nlines)
                 splits = np.random.multinomial(
@@ -75,26 +75,24 @@ def main(args: Dict[str, Any]) -> None:
                 for i, line in enumerate(file):
                     dataset_name = dataset_names[splits[i]]
                     dataset_file[dataset_name].write(line)
-                    if group_name in dataset_stats[dataset_name]:
-                        dataset_stats[dataset_name][group_name] += 1
-                    else:
-                        dataset_stats[dataset_name][group_name] = 1
-        group_name *= 2
+                    dataset_stats[dataset_name][ml][tl] += 1
 
     for dataset_name in dataset_names:
         dataset_file[dataset_name].close()
 
     for dataset_name in dataset_names:
-        print(dataset_name, dataset_stats[dataset_name])
+        for ml in dataset_stats[dataset_name]:
+            print(
+                dataset_name, ml, dict(dataset_stats[dataset_name][ml].items())
+            )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input-path", type=str, default="data/groups")
+    parser.add_argument("--input-path", type=str, default="data/grouped/")
     parser.add_argument("--output-path", type=str, default="data/dataset")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--splits", type=str, default="60,10,30")
-    parser.add_argument("--max-len", type=int, default=512)
     args = parser.parse_args()
 
     normalize_args(args)

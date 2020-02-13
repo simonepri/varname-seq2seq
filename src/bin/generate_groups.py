@@ -5,7 +5,7 @@ import re
 import math
 from typing import *
 
-from common.var_example import TokenizedVarExample
+from common.var_example import MaskedVarExample
 from utils.files import walk_files, rebase_path
 
 
@@ -32,7 +32,7 @@ def normalize_args(args: Dict[str, Any]) -> None:
 
 
 def main(args: Dict[str, Any]) -> None:
-    pattern = re.compile(r".*\.eg.tk.tsv$")
+    pattern = re.compile(r".*\.mk.tsv$")
 
     for proj in os.listdir(args.input_path):
         proj_base = os.path.join(args.input_path, proj)
@@ -41,38 +41,28 @@ def main(args: Dict[str, Any]) -> None:
 
         out_path = rebase_path(args.input_path, args.output_path, proj_base)
         os.makedirs(out_path, exist_ok=True)
-        group_files = {}
         for path, files in walk_files(
             proj_base, pattern, progress=True, batch=100
         ):
             for file in files:
                 file_path = os.path.join(path, file)
-                tokenized_examples = TokenizedVarExample.deserialize_from_file(
-                    file_path
-                )
-                for tokenized_example in tokenized_examples:
-                    text = TokenizedVarExample.serialize(tokenized_example)
-                    size = tokenized_example.size()
+                with open(file_path, "r") as f:
+                    for line in f:
+                        masked_example = MaskedVarExample.deserialize(line)
+                        mask_num = len(masked_example.masked)
+                        token_num = len(masked_example.tokens)
+                        ml = int(math.pow(2, math.ceil(math.log(mask_num, 2))))
+                        tl = int(math.pow(2, math.ceil(math.log(token_num, 2))))
 
-                    # number of special tokens that will be added by RoBERTa
-                    sp_size = 2
-                    group_name = (
-                        int(math.pow(2, math.ceil(math.log(size + sp_size, 2))))
-                    )
-                    if not group_name in group_files:
-                        out_file = "%d.group.eg.tk.tsv" % group_name
+                        out_file = "m_%d.t_%d.mk.gp.tsv" % (ml, tl)
                         out_file_path = os.path.join(out_path, out_file)
-                        group_files[group_name] = open(out_file_path, "w+")
-                    group_file = group_files[group_name]
-                    print(text, file=group_file)
-
-        for group in group_files:
-            group_files[group].close()
+                        with open(out_file_path, "a+") as group_file:
+                            group_file.write(line)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input-path", type=str, default="data/tokenized")
+    parser.add_argument("--input-path", type=str, default="data/masked")
     parser.add_argument("--output-path", type=str, default="data/groups")
     args = parser.parse_args()
 

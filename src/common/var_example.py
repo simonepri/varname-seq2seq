@@ -18,6 +18,12 @@ class VarExample:
     def __len__(self) -> int:
         return len(self.tokens)
 
+    def variables(self) -> Set[int]:
+        if hasattr(self, 'vars'):
+            return self.vars
+        self.vars = set(self.masks)
+        return self.vars
+
     @classmethod
     def serialize(cls, example: "VarExample") -> str:
         example_builder = []
@@ -29,7 +35,7 @@ class VarExample:
 
     @classmethod
     def deserialize(cls, text: str) -> "VarExample":
-        tokens, masks = [], []
+        tokens, masks, vars = [], [], set()
         parts = text.split("\t")
         for part in parts:
             token, _, varid = part.rpartition(":")
@@ -37,7 +43,10 @@ class VarExample:
             varid = int(varid)
             tokens.append(token)
             masks.append(varid)
-        return cls(tokens, masks)
+            vars.add(varid)
+        example = cls(tokens, masks)
+        example.vars = vars
+        return example
 
     @classmethod
     def serialize_to_file(

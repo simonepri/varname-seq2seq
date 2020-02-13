@@ -52,6 +52,9 @@ def main(args: Dict[str, Any]) -> None:
                 print(e, flush=True)
                 continue
 
+            # Filter out examples that does not have any variable
+            examples = list(filter(lambda e: len(e.variables()) > 0, examples))
+
             out_file = file + ".eg.tsv"
             out_file_path = os.path.join(out_path, out_file)
             VarExample.serialize_to_file(out_file_path, examples)

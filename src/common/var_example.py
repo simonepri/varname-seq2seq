@@ -87,6 +87,52 @@ class VarExample(Serializable):
         return multiple_replace(map, token)
 
 
+class MaskedVarExample(Serializable):
+    def __init__(self, tokens: List[str], masked: List[int], target: str) -> None:
+        self.tokens = tokens
+        self.masked = masked
+        self.target = target
+
+
+    @classmethod
+    def mask(cls, example: "VarExample", varid_to_mask: int) -> "MaskedVarExample":
+        tokens, masked, target = [], [], None
+        for i, (token, varid) in enumerate(example):
+            if varid == varid_to_mask:
+                tokens.append("*")
+                masked.append(i + 1)
+                if target is None:
+                    target = token
+            else:
+                tokens.append(token)
+        return MaskedVarExample(tokens, masked, target)
+
+    @classmethod
+    def serialize(cls, masked_example: "MaskedVarExample") -> str:
+        tokens = "\t".join(map(cls.__encode_token, masked_example.tokens))
+        masked = ",".join(map(str, masked_example.masked))
+        target = cls.__encode_token(masked_example.target)
+        return "\t".join([tokens, masked, target])
+
+    @classmethod
+    def deserialize(cls, text: str) -> "MaskedVarExample":
+        tokens, masked, target = text.rsplit("\t", 2)
+        tokens = list(map(cls.__decode_token, tokens.split("\t")))
+        masked = list(map(int, masked.split(",")))
+        target = cls.__decode_token(target)
+        return MaskedVarExample(tokens, masked, target)
+
+    @classmethod
+    def __encode_token(cls, token: str) -> str:
+        map = {"\n": r"\n", "\r": r"\r", "\t": r"\t"}
+        return multiple_replace(map, token)
+
+    @classmethod
+    def __decode_token(cls, token: str) -> str:
+        map = {r"\n": "\n", r"\r": "\r", r"\t": "\t"}
+        return multiple_replace(map, token)
+
+
 class TokenizedVarExample(VarExample):
     def __init__(self, multi_tokens: List[List[str]], masks: List[int]) -> None:
         assert len(multi_tokens) == len(masks)

@@ -7,6 +7,8 @@ from collections import defaultdict
 
 import numpy as np
 
+from utils.random import set_seed
+
 
 def validate_args(args: Dict[str, Any]) -> None:
     if not os.path.isdir(args.input_path):
@@ -41,7 +43,7 @@ def normalize_args(args: Dict[str, Any]) -> None:
 
 
 def main(args: Dict[str, Any]) -> None:
-    np.random.seed(args.seed)
+    set_seed(args.seed)
     os.makedirs(args.output_path, exist_ok=True)
 
     dataset_names = ["train", "dev", "test"]

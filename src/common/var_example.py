@@ -100,7 +100,7 @@ class MaskedVarExample(Serializable):
         for i, (token, varid) in enumerate(example):
             if varid == varid_to_mask:
                 tokens.append("*")
-                masked.append(i + 1)
+                masked.append(i)
                 if target is None:
                     target = token
             else:

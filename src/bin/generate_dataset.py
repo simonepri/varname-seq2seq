@@ -90,7 +90,7 @@ def main(args: Dict[str, Any]) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input-path", type=str, default="data/grouped/")
+    parser.add_argument("--input-path", type=str, default="data/groups")
     parser.add_argument("--output-path", type=str, default="data/dataset")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--splits", type=str, default="60,10,30")

@@ -77,16 +77,15 @@ def main(args: Dict[str, Any]) -> None:
                 for i, line in enumerate(file):
                     dataset_name = dataset_names[splits[i]]
                     dataset_file[dataset_name].write(line)
-                    dataset_stats[dataset_name][ml][tl] += 1
+                    dataset_stats[dataset_name]['m'][ml] += 1
+                    dataset_stats[dataset_name]['t'][tl] += 1
 
     for dataset_name in dataset_names:
         dataset_file[dataset_name].close()
 
     for dataset_name in dataset_names:
-        for ml in dataset_stats[dataset_name]:
-            print(
-                dataset_name, ml, dict(dataset_stats[dataset_name][ml].items())
-            )
+        print(dataset_name, 'm', dict(sorted(dataset_stats[dataset_name]['m'].items(), key=lambda e:e[0])))
+        print(dataset_name, 't', dict(sorted(dataset_stats[dataset_name]['t'].items(), key=lambda e:e[0])))
 
 
 if __name__ == "__main__":

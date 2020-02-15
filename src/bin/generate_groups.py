@@ -5,7 +5,7 @@ import re
 import math
 from typing import *
 
-from common.var_example import MaskedVarExample
+from features.examples import MaskedVarExample
 from utils.files import walk_files, rebase_path
 
 

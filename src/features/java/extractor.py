@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import *
 
-from common.var_example import VarExample
+from features.examples import VarExample
 from features.java.ast import (
     JavaAst,
     JavaAstNode,

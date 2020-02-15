@@ -1,8 +1,6 @@
 import ast
 from typing import *
 
-from transformers import PreTrainedTokenizer
-
 from utils.strings import multiple_replace
 
 

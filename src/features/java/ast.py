@@ -6,9 +6,9 @@ from subprocess import DEVNULL, STDOUT, check_call, CalledProcessError
 from typing import *
 
 import utils.bisect as bisect
-from proto.graph_pb2 import Graph
-from proto.graph_pb2 import FeatureNode as JavaAstNodeType
-from proto.graph_pb2 import FeatureEdge as JavaAstEdgeType
+from features.java.proto.graph_pb2 import Graph
+from features.java.proto.graph_pb2 import FeatureNode as JavaAstNodeType
+from features.java.proto.graph_pb2 import FeatureEdge as JavaAstEdgeType
 from utils.download import download_url
 
 

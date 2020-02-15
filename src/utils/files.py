@@ -35,12 +35,10 @@ def walk_files(
 
 
 def rebase_path(
-    input_base: str,
-    output_base: str,
-    path: str,
+    input_base: str, output_base: str, path: str,
 ) -> Tuple[str, str]:
-        out_path = output_base
-        rel_path = os.path.relpath(path, input_base)
-        if rel_path != ".":
-            out_path = os.path.join(out_path, rel_path)
-        return out_path
+    out_path = output_base
+    rel_path = os.path.relpath(path, input_base)
+    if rel_path != ".":
+        out_path = os.path.join(out_path, rel_path)
+    return out_path

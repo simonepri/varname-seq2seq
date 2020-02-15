@@ -26,8 +26,8 @@ def truncate(text: str, length: int, ellipsis: Optional[str] = None) -> str:
 
 
 def rreplace(suffix: str, sub: str, string: str) -> str:
-    return string[:-len(suffix)] + sub if string.endswith(suffix) else string
+    return string[: -len(suffix)] + sub if string.endswith(suffix) else string
 
 
 def lreplace(prefix: str, sub: str, string: str) -> str:
-    return sub + string[len(prefix):] if string.startswith(prefix) else string
+    return sub + string[len(prefix) :] if string.startswith(prefix) else string

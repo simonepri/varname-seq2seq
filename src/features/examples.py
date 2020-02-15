@@ -86,14 +86,17 @@ class VarExample(Serializable):
 
 
 class MaskedVarExample(Serializable):
-    def __init__(self, tokens: List[str], masked: List[int], target: str) -> None:
+    def __init__(
+        self, tokens: List[str], masked: List[int], target: str
+    ) -> None:
         self.tokens = tokens
         self.masked = masked
         self.target = target
 
-
     @classmethod
-    def mask(cls, example: "VarExample", varid_to_mask: int) -> "MaskedVarExample":
+    def mask(
+        cls, example: "VarExample", varid_to_mask: int
+    ) -> "MaskedVarExample":
         tokens, masked, target = [], [], None
         for i, (token, varid) in enumerate(example):
             if varid == varid_to_mask:

@@ -131,7 +131,10 @@ def main(args: Dict[str, Any]) -> None:
             print("¤ Epoch %d / %d" % (epoch, args.epochs))
 
             train_it = Seq2SeqDataLoader(
-                train_dataset, shuffle=True, device=device
+                train_dataset,
+                batch_size=args.batch_size,
+                shuffle=True,
+                device=device,
             )
             train_it = tqdm(train_it, desc="├ Train", file=sys.stdout)
             train_loss, train_acc = model.run_epoch(
@@ -141,7 +144,9 @@ def main(args: Dict[str, Any]) -> None:
                 "│ └ Loss: %.3f | Acc: %.2f%%" % (train_loss, train_acc * 100)
             )
 
-            valid_it = Seq2SeqDataLoader(valid_dataset, device=device)
+            valid_it = Seq2SeqDataLoader(
+                valid_dataset, batch_size=args.batch_size, device=device
+            )
             valid_it = tqdm(valid_it, desc="└ Valid", file=sys.stdout)
             valid_loss, valid_acc = model.run_epoch(valid_it)
             if valid_loss >= best_valid_loss or math.isinf(best_valid_loss):
@@ -170,7 +175,9 @@ def main(args: Dict[str, Any]) -> None:
         test_dataset = Seq2SeqDataset(test_data)
 
         print("¤ Evaluation ")
-        test_it = Seq2SeqDataLoader(test_dataset, device=device)
+        test_it = Seq2SeqDataLoader(
+            test_dataset, batch_size=args.batch_size, device=device
+        )
         test_it = tqdm(test_it, desc="├ Test", file=sys.stdout)
 
         test_loss, test_acc = model.run_epoch(test_it)
@@ -199,7 +206,7 @@ if __name__ == "__main__":
     parser.add_argument("--output-seq-max-length", type=int, default=64)
     parser.add_argument("--do-train", default=False, action="store_true")
     parser.add_argument("--do-test", default=False, action="store_true")
-    parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()

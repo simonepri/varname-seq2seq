@@ -93,7 +93,6 @@ class Seq2SeqModel(torch.nn.Module):
         iterator: Iterable[Tuple[torch.Tensor, torch.Tensor]],
         optimizer: Optional[torch.optim.Optimizer] = None,
         clip: float = 1.0,
-        device: torch.device = None,
     ) -> Tuple[float, float]:
         self.train() if optimizer is not None else self.eval()
 

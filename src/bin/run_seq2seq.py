@@ -5,8 +5,6 @@ import os
 import time
 import math
 import pickle
-from functools import partial
-from itertools import islice
 from typing import *
 
 import torch

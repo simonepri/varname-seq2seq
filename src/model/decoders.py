@@ -39,7 +39,7 @@ class RNNDecoder(torch.nn.Module):
     # hidden = (h_n, c_n) if LSTM or h_n ortherwise
     # h_n = [num_layers, batch_size, hidden_dim]
     # c_n = [num_layers, batch_size, hidden_dim]
-    def forward(self, input, input_len, hidden=None):
+    def forward(self, input, hidden=None):
         # input = [1, batch_size]
         input = input.unsqueeze(0)
 

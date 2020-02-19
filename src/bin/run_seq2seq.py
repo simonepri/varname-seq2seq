@@ -10,7 +10,6 @@ from itertools import islice
 from typing import *
 
 import torch
-import torchtext
 import numpy as np
 from tqdm import tqdm
 

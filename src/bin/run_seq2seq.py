@@ -130,6 +130,7 @@ def main(args: Dict[str, Any]) -> None:
 
             train_it = Seq2SeqDataLoader(
                 train_dataset,
+                pad=processor.pad_token_id,
                 batch_size=args.batch_size,
                 shuffle=True,
                 device=device,
@@ -143,7 +144,10 @@ def main(args: Dict[str, Any]) -> None:
             )
 
             valid_it = Seq2SeqDataLoader(
-                valid_dataset, batch_size=args.batch_size, device=device
+                valid_dataset,
+                pad=processor.pad_token_id,
+                batch_size=args.batch_size,
+                device=device,
             )
             valid_it = tqdm(valid_it, desc="└ Valid", file=sys.stdout)
             valid_loss, valid_acc = model.run_epoch(valid_it)
@@ -174,7 +178,10 @@ def main(args: Dict[str, Any]) -> None:
 
         print("¤ Evaluation ")
         test_it = Seq2SeqDataLoader(
-            test_dataset, batch_size=args.batch_size, device=device
+            test_dataset,
+            pad=processor.pad_token_id,
+            batch_size=args.batch_size,
+            device=device,
         )
         test_it = tqdm(test_it, desc="├ Test", file=sys.stdout)
 

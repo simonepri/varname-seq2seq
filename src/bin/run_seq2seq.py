@@ -179,7 +179,7 @@ def main(args: Dict[str, Any]) -> None:
         test_it = tqdm(test_it, desc="├ Test", file=sys.stdout)
 
         test_loss, test_acc = model.run_epoch(test_it)
-        print("  └ Loss: %.3f | Acc: %.3f%%" % (test_loss, test_acc*100))
+        print("  └ Loss: %.3f | Acc: %.3f%%" % (test_loss, test_acc * 100))
 
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ class RNNDecoder(torch.nn.Module):
         output_dim,
         embedding_dim,
         hidden_dim,
-        num_layers,
+        num_layers=1,
         rnn_cell="lstm",
         embedding_dropout=0.0,
         layers_dropout=0.0,

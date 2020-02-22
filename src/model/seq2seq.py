@@ -45,13 +45,14 @@ class Seq2SeqModel(torch.nn.Module):
         target_length: torch.Tensor,
         teacher_forcing_ratio: float = 0.5,
     ) -> torch.Tensor:
+        device = target_seq.device
         batch_size = target_seq.shape[1]
         target_len = target_seq.shape[0]
         output_size = self.decoder.output_dim
 
         # tensor to store decoder outputs
         outputs = torch.zeros(
-            target_len, batch_size, output_size, device=target_seq.device
+            target_len, batch_size, output_size, device=device
         )
         outputs[0, :, target_seq[0, 0]] = torch.tensor(1.0)
 
@@ -137,6 +138,31 @@ class Seq2SeqModel(torch.nn.Module):
         final_loss = epoch_loss / len(iterator)
         final_acc = epoch_correct_preds / epoch_total_preds
         return final_loss, final_acc
+
+    def run_prediction(
+        self, sequence: torch.Tensor, max_len: int
+    ) -> torch.Tensor:
+        device = sequence.device
+
+        self.eval()
+        with torch.no_grad():
+            src = sequence.unsqueeze(1)
+            src_len = torch.tensor([len(sequence)], device=device)
+            preds = torch.full(
+                (max_len,), self.pad_token_id, dtype=torch.long, device=device
+            )
+
+            _, hidden = self.encoder(src, src_len)
+            input = torch.tensor([self.bos_token_id], device=device)
+            preds[0] = input[0].item()
+            for t in range(1, max_len):
+                output, hidden = self.decoder(input, hidden)
+                pred = output.argmax(dim=-1)
+                preds[t] = pred.item()
+                if preds[t] == self.eos_token_id:
+                    return preds[: t + 1]
+                input = pred
+        return preds
 
     @classmethod
     def from_config(cls, config: Config):

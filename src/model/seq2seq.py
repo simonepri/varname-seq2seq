@@ -4,7 +4,7 @@ from typing import *
 
 import torch
 
-from utils.configs import Config
+from model.config import Seq2SeqConfig
 from model.encoders import RNNEncoder
 from model.decoders import RNNDecoder
 
@@ -20,10 +20,6 @@ class Seq2SeqModel(torch.nn.Module):
         mask_token_id: int,
     ) -> None:
         super().__init__()
-
-        assert encoder.hidden_dim == decoder.hidden_dim
-        assert encoder.num_layers == decoder.num_layers
-        assert encoder.rnn_cell == decoder.rnn_cell
 
         self.encoder = encoder
         self.decoder = decoder
@@ -165,28 +161,28 @@ class Seq2SeqModel(torch.nn.Module):
         return preds
 
     @classmethod
-    def from_config(cls, config: Config):
-        if config.encoder_name in ["gru", "lstm"]:
+    def from_config(cls, config: Seq2SeqConfig):
+        if config.encoder.name == "rnn":
             enc = RNNEncoder(
-                config.vocab_size,
-                config.embedding_size,
-                config.hidden_size,
-                num_layers=config.num_layers,
-                layers_dropout=config.layers_dropout,
-                embedding_dropout=config.embedding_dropout,
-                rnn_cell=config.encoder_name,
+                config.encoder.vocab_size,
+                config.encoder.embedding_size,
+                config.encoder.hidden_size,
+                num_layers=config.encoder.num_layers,
+                layers_dropout=config.encoder.layers_dropout,
+                embedding_dropout=config.encoder.embedding_dropout,
+                rnn_cell=config.encoder.rnn_cell,
             )
         else:
             raise NotImplementedError()
-        if config.decoder_name in ["gru", "lstm"]:
+        if config.decoder.name in "rnn":
             dec = RNNDecoder(
-                config.vocab_size,
-                config.embedding_size,
-                config.hidden_size,
-                num_layers=config.num_layers,
-                layers_dropout=config.layers_dropout,
-                embedding_dropout=config.embedding_dropout,
-                rnn_cell=config.decoder_name,
+                config.decoder.vocab_size,
+                config.decoder.embedding_size,
+                config.decoder.hidden_size,
+                num_layers=config.decoder.num_layers,
+                layers_dropout=config.decoder.layers_dropout,
+                embedding_dropout=config.decoder.embedding_dropout,
+                rnn_cell=config.decoder.rnn_cell,
             )
         else:
             raise NotImplementedError()

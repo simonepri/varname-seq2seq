@@ -5,7 +5,7 @@ from typing import *
 import torch
 
 from model.tokenizers import RobertaTokenizer
-from utils.configs import Config
+from model.config import Seq2SeqConfig
 
 
 class Seq2SeqProcessor:
@@ -39,6 +39,8 @@ class Seq2SeqProcessor:
     def tensorise(
         self, source: List[str], target: str, masked: List[int],
     ) -> Tuple[torch.Tensor, torch.Tensor]:
+        assert len(masked) > 0
+
         def trunc_to_len(list, max_length, include_pos=0):
             if len(list) > max_length:
                 start_pos = max(0, include_pos - max_length // 2)
@@ -76,8 +78,8 @@ class Seq2SeqProcessor:
         return (enc_source, enc_target)
 
     @classmethod
-    def from_config(cls, config: Config):
-        if config.processor_name == "roberta":
+    def from_config(cls, config: Seq2SeqConfig):
+        if config.name == "roberta-bpe":
             tokenizer = RobertaTokenizer()
         else:
             raise NotImplementedError()

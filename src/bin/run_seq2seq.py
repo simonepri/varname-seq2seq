@@ -169,12 +169,15 @@ def train(
 
     model_file_path = os.path.join(run_path, "model.pt")
     config_file_path = os.path.join(run_path, "config.pkl")
+    metrics_file_path = os.path.join(run_path, "metrics.tsv")
 
     print("The model has %d trainable parameters" % model.count_parameters())
 
     print("Saving initial model and configs")
     torch.save(model.state_dict(), model_file_path)
     config.save(config_file_path)
+    with open(metrics_file_path, "w+") as handle:
+        print("Epoch\tTrain loss\tTrain acc\tDev loss\tDev acc", file=handle)
 
     print("Loading the training dataset")
     train_data = load_and_cache_data(processor, train_file, cache_path)
@@ -222,6 +225,13 @@ def train(
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
             torch.save(model.state_dict(), model_file_path)
+
+        with open(metrics_file_path, "a") as handle:
+            print(
+                "%d\t%.4f\t%.2f\t%.4f\t%.2f"
+                % (epoch, train_loss, train_acc, valid_loss, valid_acc),
+                file=handle,
+            )
 
 
 def test(

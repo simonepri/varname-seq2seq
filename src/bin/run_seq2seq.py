@@ -198,8 +198,9 @@ def train(
             device=device,
         )
         train_it = tqdm(train_it, desc="├ Train", file=sys.stdout)
-        train_loss, train_acc = model.run_epoch(train_it, optimizer=optimizer,)
-        print("│ └ Loss: %.3f | Acc: %.2f%%" % (train_loss, train_acc * 100))
+        train_loss, train_acc = model.run_epoch(train_it, optimizer=optimizer)
+        train_acc *= 100
+        print("│ └ Loss: %.3f | Acc: %.2f%%" % (train_loss, train_acc))
 
         valid_it = Seq2SeqDataLoader(
             valid_dataset,
@@ -209,15 +210,14 @@ def train(
         )
         valid_it = tqdm(valid_it, desc="└ Valid", file=sys.stdout)
         valid_loss, valid_acc = model.run_epoch(valid_it)
+        valid_acc *= 100
         if valid_loss >= best_valid_loss or math.isinf(best_valid_loss):
-            print(
-                "  └ Loss: %.3f | Acc: %.2f%%" % (valid_loss, valid_acc * 100)
-            )
+            print("  └ Loss: %.3f | Acc: %.2f%%" % (valid_loss, valid_acc))
         else:
             delta_loss = valid_loss - best_valid_loss
             print(
                 "  └ Loss: %.3f (%.3fΔ) | Acc: %.2f%%"
-                % (valid_loss, delta_loss, valid_acc * 100)
+                % (valid_loss, delta_loss, valid_acc)
             )
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
@@ -259,7 +259,8 @@ def test(
     test_it = tqdm(test_it, desc="├ Test", file=sys.stdout)
 
     test_loss, test_acc = model.run_epoch(test_it)
-    print("  └ Loss: %.3f | Acc: %.3f%%" % (test_loss, test_acc * 100))
+    test_acc *= 100
+    print("  └ Loss: %.3f | Acc: %.3f%%" % (test_loss, test_acc))
 
 
 def main(args: Dict[str, Any]) -> None:

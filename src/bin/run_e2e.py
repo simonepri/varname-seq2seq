@@ -18,7 +18,7 @@ EXTRACTORS = {"java": JavaVarExamplesExtractor}
 
 
 def validate_args(args: Dict[str, Any]) -> None:
-    if extractor_for_file(args.file_path) == None:
+    if extractor_for_file(args.file_path) is None:
         raise ValueError(
             "Currently only file with the following extesions are supported: %s"
             % list(EXTRACTORS.keys())
@@ -94,7 +94,9 @@ def main(args: Dict[str, Any]) -> None:
             if prediction == target:
                 print("✔️  | %03d.%03d | %s" % (i + 1, j + 1, target))
                 continue
-            print("⚠️  | %03d.%03d | %s → %s" % (i + 1, j + 1, target, prediction))
+            print(
+                "⚠️  | %03d.%03d | %s → %s" % (i + 1, j + 1, target, prediction)
+            )
 
 
 if __name__ == "__main__":

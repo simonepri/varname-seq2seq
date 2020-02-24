@@ -16,7 +16,7 @@ def parse_args() -> Dict[str, Any]:
     parser.add_argument("--output-path", type=str, default="data/dataset")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--splits", type=str, default="60,10,30")
-    
+
     return parser.parse_args()
 
 def validate_args(args: Dict[str, Any]) -> None:
@@ -103,8 +103,11 @@ def main(args: Dict[str, Any]) -> None:
 
 
 if __name__ == "__main__":
-    args = parse_args()
+    try:
+        args = parse_args()
 
-    normalize_args(args)
-    validate_args(args)
-    main(args)
+        normalize_args(args)
+        validate_args(args)
+        main(args)
+    except (KeyboardInterrupt, SystemExit):
+        print("\nAborted!")

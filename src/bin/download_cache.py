@@ -18,7 +18,7 @@ def parse_args() -> Dict[str, Any]:
 
     return parser.parse_args()
 
-def check_preconditions() -> None:
+def validate_args(args: Dict[str, Any]) -> None:
     if os.path.exists(JavaAst.AST_PROTO_DIR):
         if not os.path.isdir(JavaAst.AST_PROTO_DIR):
             raise ValueError(
@@ -72,8 +72,11 @@ def main(
 
 
 if __name__ == "__main__":
-    args = parse_args()
+    try:
+        args = parse_args()
 
-    check_preconditions()
-    normalize_args(args)
-    main(args)
+        normalize_args(args)
+        validate_args(args)
+        main(args)
+    except (KeyboardInterrupt, SystemExit):
+        print("\nAborted!")

@@ -65,8 +65,11 @@ def main(args: Dict[str, Any]) -> None:
 
 
 if __name__ == "__main__":
-    args = parse_args()
+    try:
+        args = parse_args()
 
-    normalize_args(args)
-    validate_args(args)
-    main(args)
+        normalize_args(args)
+        validate_args(args)
+        main(args)
+    except (KeyboardInterrupt, SystemExit):
+        print("\nAborted!")

@@ -19,7 +19,7 @@ from utils.random import set_seed
 
 def parse_args() -> Dict[str, Any]:
     parser = argparse.ArgumentParser()
-    
+
     parser.add_argument(
         "--train-file", type=str, default="data/dataset/train.mk.tsv"
     )
@@ -338,8 +338,11 @@ def main(args: Dict[str, Any]) -> None:
 
 
 if __name__ == "__main__":
-    args = parse_args()
+    try:
+        args = parse_args()
 
-    normalize_args(args)
-    validate_args(args)
-    main(args)
+        normalize_args(args)
+        validate_args(args)
+        main(args)
+    except (KeyboardInterrupt, SystemExit):
+        print("\nAborted!")

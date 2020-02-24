@@ -8,6 +8,13 @@ from tqdm import tqdm
 
 from utils.download import download_url
 
+def parse_args() -> Dict[str, Any]:
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--file-name", type=str)
+    parser.add_argument("--data-path", type=str)
+
+    return parser.parse_args()
 
 def validate_args(args: Dict[str, Any]) -> None:
     if os.path.exists(args.data_path):
@@ -46,10 +53,7 @@ def main(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--file-name", type=str)
-    parser.add_argument("--data-path", type=str)
-    args = parser.parse_args()
+    args = parse_args()
 
     validate_args(args)
     normalize_args(args)

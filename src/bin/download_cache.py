@@ -10,6 +10,13 @@ from features.java.ast import JavaAst
 from utils.download import download_url
 from utils.strings import lreplace, rreplace
 
+def parse_args() -> Dict[str, Any]:
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--data-path", type=str, default="data/corpora")
+    parser.add_argument("--remove-prefix", type=str, default=":data:")
+
+    return parser.parse_args()
 
 def check_preconditions() -> None:
     if os.path.exists(JavaAst.AST_PROTO_DIR):
@@ -65,10 +72,7 @@ def main(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data-path", type=str, default="data/corpora")
-    parser.add_argument("--remove-prefix", type=str, default=":data:")
-    args = parser.parse_args()
+    args = parse_args()
 
     check_preconditions()
     normalize_args(args)

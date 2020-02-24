@@ -17,6 +17,44 @@ from model.processor import Seq2SeqProcessor
 from model.seq2seq import Seq2SeqModel
 from utils.random import set_seed
 
+def parse_args() -> Dict[str, Any]:
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument(
+        "--train-file", type=str, default="data/dataset/train.mk.tsv"
+    )
+    parser.add_argument(
+        "--valid-file", type=str, default="data/dataset/dev.mk.tsv"
+    )
+    parser.add_argument(
+        "--test-file", type=str, default="data/dataset/test.mk.tsv"
+    )
+    parser.add_argument("--run-id", type=str, default="")
+    parser.add_argument("--cache-path", type=str, default=".cache/model")
+    parser.add_argument("--output-path", type=str, default="data/models")
+
+    parser.add_argument("--processor-name", type=str, default="roberta-bpe")
+    parser.add_argument("--encoder-name", type=str, default="rnn")
+    parser.add_argument("--decoder-name", type=str, default="rnn")
+
+    parser.add_argument("--rnn-cell", type=str, default="lstm")
+    parser.add_argument("--rnn-num-layers", type=int, default=2)
+    parser.add_argument("--rnn-hidden-size", type=int, default=512)
+    parser.add_argument("--rnn-layers-dropout", type=float, default=0.5)
+    parser.add_argument("--rnn-embedding-size", type=int, default=256)
+    parser.add_argument("--rnn-embedding-dropout", type=float, default=0.5)
+
+    parser.add_argument("--input-seq-max-length", type=int, default=256)
+    parser.add_argument("--output-seq-max-length", type=int, default=64)
+
+    parser.add_argument("--do-train", default=False, action="store_true")
+    parser.add_argument("--do-test", default=False, action="store_true")
+
+    parser.add_argument("--batch-size", type=int, default=64)
+    parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--seed", type=int, default=42)
+
+    return parser.parse_args()
 
 def validate_args(args: Dict[str, Any]) -> None:
     if not args.do_train and not args.do_test:
@@ -300,42 +338,7 @@ def main(args: Dict[str, Any]) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--train-file", type=str, default="data/dataset/train.mk.tsv"
-    )
-    parser.add_argument(
-        "--valid-file", type=str, default="data/dataset/dev.mk.tsv"
-    )
-    parser.add_argument(
-        "--test-file", type=str, default="data/dataset/test.mk.tsv"
-    )
-    parser.add_argument("--run-id", type=str, default="")
-    parser.add_argument("--cache-path", type=str, default=".cache/model")
-    parser.add_argument("--output-path", type=str, default="data/models")
-
-    parser.add_argument("--processor-name", type=str, default="roberta-bpe")
-    parser.add_argument("--encoder-name", type=str, default="rnn")
-    parser.add_argument("--decoder-name", type=str, default="rnn")
-
-    parser.add_argument("--rnn-cell", type=str, default="lstm")
-    parser.add_argument("--rnn-num-layers", type=int, default=2)
-    parser.add_argument("--rnn-hidden-size", type=int, default=512)
-    parser.add_argument("--rnn-layers-dropout", type=float, default=0.5)
-    parser.add_argument("--rnn-embedding-size", type=int, default=256)
-    parser.add_argument("--rnn-embedding-dropout", type=float, default=0.5)
-
-    parser.add_argument("--input-seq-max-length", type=int, default=256)
-    parser.add_argument("--output-seq-max-length", type=int, default=64)
-
-    parser.add_argument("--do-train", default=False, action="store_true")
-    parser.add_argument("--do-test", default=False, action="store_true")
-
-    parser.add_argument("--batch-size", type=int, default=64)
-    parser.add_argument("--epochs", type=int, default=10)
-    parser.add_argument("--seed", type=int, default=42)
-
-    args = parser.parse_args()
+    args = parse_args()
 
     normalize_args(args)
     validate_args(args)

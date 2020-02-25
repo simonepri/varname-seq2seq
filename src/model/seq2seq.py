@@ -97,9 +97,8 @@ class Seq2SeqModel(torch.nn.Module):
 
         self.train() if optimizer is not None else self.eval()
 
-        epoch_correct_preds = 0
-        epoch_total_preds = 0
-        epoch_loss = 0.0
+        epoch_loss = 0.0, 0
+        epoch_acc = 0, 0
         with nullcontext() if optimizer is not None else torch.no_grad():
             for batch in iterator:
                 src, src_len, trg, trg_len = batch
@@ -117,15 +116,7 @@ class Seq2SeqModel(torch.nn.Module):
                 loss = self.criterion(
                     outputs.view(-1, outputs.shape[-1]), trg.view(-1)
                 )
-                epoch_loss += loss.item()
-
-                # Count number of correct tokens
-                preds = outputs.argmax(dim=-1)
-                no_pad = trg.ne(self.pad_token_id)
-                epoch_correct_preds += (
-                    preds.eq(trg).masked_select(no_pad).sum().item()
-                )
-                epoch_total_preds += trg_len.sum().item()
+                epoch_loss = tuple(map(sum, zip(epoch_loss, (loss.item(), 1))))
 
                 if optimizer is not None:
                     # Perform backpropatation
@@ -137,8 +128,15 @@ class Seq2SeqModel(torch.nn.Module):
                     # Adjust model weights
                     optimizer.step()
 
-        final_loss = epoch_loss / len(iterator)
-        final_acc = epoch_correct_preds / epoch_total_preds
+                with nullcontext() if optimizer is None else torch.no_grad():
+                    # Count number of correct tokens and edit distance
+                    preds = outputs.argmax(dim=-1)
+
+                    acc = self.__compute_acc(preds, trg)
+                    epoch_acc = tuple(map(sum, zip(epoch_acc, acc)))
+
+        final_loss = epoch_loss[0] / epoch_loss[1]
+        final_acc = epoch_acc[0] / epoch_acc[1]
         return final_loss, final_acc
 
     def run_prediction(
@@ -165,6 +163,14 @@ class Seq2SeqModel(torch.nn.Module):
                     return preds[: t + 1]
                 input = pred
         return preds
+
+    def __compute_acc(
+        self, predictions: torch.Tensor, targets: torch.Tensor
+    ) -> Tuple[int, int]:
+        no_pad = targets.ne(self.pad_token_id)
+        correct = predictions.eq(targets).masked_select(no_pad).sum().item()
+        total = no_pad.sum().item()
+        return correct, total
 
     @classmethod
     def from_config(cls, config: Seq2SeqConfig):

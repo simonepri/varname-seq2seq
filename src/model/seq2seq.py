@@ -63,7 +63,7 @@ class Seq2SeqModel(torch.nn.Module):
             # insert input token embedding, previous hidden and previous cell
             # states receive output tensor (predictions) and new hidden and cell
             # states
-            output, hidden = self.decoder(input, hidden)
+            output, hidden = self.decoder(input.detach(), hidden)
 
             # place predictions in a tensor holding predictions for each token
             outputs[t] = output

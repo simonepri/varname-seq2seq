@@ -239,7 +239,9 @@ def train(
             device=device,
         )
         train_it = tqdm(train_it, desc="├ Train", file=sys.stdout)
-        train_loss, train_acc = model.run_epoch(train_it, optimizer=optimizer)
+        train_loss, train_acc = model.run_epoch(
+            train_it, optimizer=optimizer, teacher_forcing_ratio=0.5
+        )
         train_acc *= 100
         print("│ └ Loss: %.3f | Acc: %.2f%%" % (train_loss, train_acc))
 

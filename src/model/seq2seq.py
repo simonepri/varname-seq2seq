@@ -39,7 +39,7 @@ class Seq2SeqModel(torch.nn.Module):
         source_length: torch.Tensor,
         target_seq: torch.Tensor,
         target_length: torch.Tensor,
-        teacher_forcing_ratio: float = 0.5,
+        teacher_forcing_ratio: float,
     ) -> torch.Tensor:
         device = target_seq.device
         batch_size = target_seq.shape[1]
@@ -89,8 +89,12 @@ class Seq2SeqModel(torch.nn.Module):
         self,
         iterator: Iterable[Tuple[torch.Tensor, torch.Tensor]],
         optimizer: Optional[torch.optim.Optimizer] = None,
+        teacher_forcing_ratio: float = 0.0,
         clip: float = 1.0,
     ) -> Tuple[float, float]:
+        assert teacher_forcing_ratio == 0.0 or optimizer is not None
+        assert 0.0 <= teacher_forcing_ratio and teacher_forcing_ratio <= 1.0
+
         self.train() if optimizer is not None else self.eval()
 
         epoch_correct_preds = 0
@@ -105,7 +109,9 @@ class Seq2SeqModel(torch.nn.Module):
                     optimizer.zero_grad()
 
                 # Forward pass through the seq2seq model
-                outputs = self.forward(src, src_len, trg, trg_len)
+                outputs = self.forward(
+                    src, src_len, trg, trg_len, teacher_forcing_ratio
+                )
 
                 # Calculate and accumulate the loss
                 loss = self.criterion(

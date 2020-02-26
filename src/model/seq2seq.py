@@ -2,11 +2,14 @@ import random
 from contextlib import nullcontext
 from typing import *
 
+import editdistance
 import torch
 
 from model.config import Seq2SeqConfig
 from model.encoders import RNNEncoder
 from model.decoders import RNNDecoder
+
+from utils.torch import find_first
 
 
 class Seq2SeqModel(torch.nn.Module):
@@ -81,6 +84,14 @@ class Seq2SeqModel(torch.nn.Module):
 
         return outputs
 
+    def predict(
+        self, outputs: torch.Tensor
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        pred = outputs.argmax(dim=-1)
+        _, first_eos = find_first(pred, self.eos_token_id, axis=0)
+        pred_len = first_eos + 1
+        return pred, pred_len
+
     def count_parameters(self) -> int:
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
 
@@ -95,14 +106,14 @@ class Seq2SeqModel(torch.nn.Module):
         optimizer: Optional[torch.optim.Optimizer] = None,
         teacher_forcing_ratio: float = 0.0,
         clip: float = 1.0,
-    ) -> Tuple[float, float]:
+    ) -> Tuple[float, Dict[str, float]]:
         assert teacher_forcing_ratio == 0.0 or optimizer is not None
         assert 0.0 <= teacher_forcing_ratio and teacher_forcing_ratio <= 1.0
 
         self.train() if optimizer is not None else self.eval()
 
-        epoch_loss = 0.0, 0
-        epoch_acc = 0, 0
+        total_loss = (0, 0)
+        metrics = {"tacc": (0, 0), "acc": (0, 0), "edist": (0, 0)}
         with nullcontext() if optimizer is not None else torch.no_grad():
             for batch in iterator:
                 src, src_len, trg, trg_len = batch
@@ -120,28 +131,30 @@ class Seq2SeqModel(torch.nn.Module):
                 loss = self.criterion(
                     loss_outputs.view(-1, loss_outputs.shape[-1]), trg.view(-1)
                 )
-                epoch_loss = tuple(map(sum, zip(epoch_loss, (loss.item(), 1))))
+                total_loss = tuple(map(sum, zip(total_loss, (loss.item(), 1))))
 
                 if optimizer is not None:
-                    # Perform backpropatation
+                    # Perform backpropatation, clip gradients, and adjust model weights
                     loss.backward()
-
-                    # Clip gradients
                     torch.nn.utils.clip_grad_norm_(self.parameters(), clip)
-
-                    # Adjust model weights
                     optimizer.step()
 
                 with nullcontext() if optimizer is None else torch.no_grad():
-                    # Count number of correct tokens and edit distance
-                    preds = outputs.argmax(dim=-1)
+                    # Compute additional metrics
+                    pred, pred_len = self.predict(outputs)
+                    tacc = self.__compute_tacc(pred, pred_len, trg, trg_len)
+                    acc = self.__compute_acc(pred, pred_len, trg, trg_len)
+                    edist = self.__compute_edist(pred, pred_len, trg, trg_len)
+                    metrics = {
+                        "tacc": tuple(map(sum, zip(metrics["tacc"], tacc))),
+                        "acc": tuple(map(sum, zip(metrics["acc"], acc))),
+                        "edist": tuple(map(sum, zip(metrics["edist"], edist))),
+                    }
 
-                    acc = self.__compute_acc(preds, trg)
-                    epoch_acc = tuple(map(sum, zip(epoch_acc, acc)))
+        for key in metrics:
+            metrics[key] = metrics[key][0] / metrics[key][1] * 100
 
-        final_loss = epoch_loss[0] / epoch_loss[1]
-        final_acc = epoch_acc[0] / epoch_acc[1]
-        return final_loss, final_acc
+        return total_loss[0] / total_loss[1], metrics
 
     def run_prediction(
         self, sequence: torch.Tensor, max_len: int
@@ -168,12 +181,52 @@ class Seq2SeqModel(torch.nn.Module):
                 input = pred
         return preds
 
-    def __compute_acc(
-        self, predictions: torch.Tensor, targets: torch.Tensor
+    def __compute_tacc(
+        self,
+        pred: torch.Tensor,
+        pred_len: torch.Tensor,
+        trg: torch.Tensor,
+        trg_len: torch.Tensor,
     ) -> Tuple[int, int]:
-        no_pad = targets.ne(self.pad_token_id)
-        correct = predictions.eq(targets).masked_select(no_pad).sum().item()
+        trg_max_len = trg.shape[0]
+        no_pad = trg.ne(self.pad_token_id)
+        correct = (
+            pred[:trg_max_len, :].eq(trg).masked_select(no_pad).sum().item()
+        )
         total = no_pad.sum().item()
+        return correct, total
+
+    def __compute_acc(
+        self,
+        pred: torch.Tensor,
+        pred_len: torch.Tensor,
+        trg: torch.Tensor,
+        trg_len: torch.Tensor,
+    ) -> Tuple[int, int]:
+        batch_size = pred.shape[1]
+
+        correct, total = 0, 0
+        for b in range(0, batch_size):
+            min_len = min(pred_len[b].item(), trg_len[b].item())
+            max_len = max(pred_len[b].item(), trg_len[b].item())
+            correct += pred[:min_len, b].eq(trg[:min_len, b]).sum().item()
+            total += max_len
+        return correct, total
+
+    def __compute_edist(
+        self,
+        pred: torch.Tensor,
+        pred_len: torch.Tensor,
+        trg: torch.Tensor,
+        trg_len: torch.Tensor,
+    ) -> Tuple[int, int]:
+        batch_size = pred.shape[1]
+
+        correct, total = pred_len.sum().item(), trg_len.sum().item()
+        for b in range(0, batch_size):
+            prediction, target = pred[: pred_len[b], b], trg[: trg_len[b], b]
+            edist = editdistance.eval(prediction, target)
+            correct -= edist
         return correct, total
 
     @classmethod

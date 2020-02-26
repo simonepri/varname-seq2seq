@@ -17,6 +17,7 @@ from model.processor import Seq2SeqProcessor
 from model.seq2seq import Seq2SeqModel
 from utils.random import set_seed
 
+
 def parse_args() -> Dict[str, Any]:
     parser = argparse.ArgumentParser()
 
@@ -55,6 +56,7 @@ def parse_args() -> Dict[str, Any]:
     parser.add_argument("--seed", type=int, default=42)
 
     return parser.parse_args()
+
 
 def validate_args(args: Dict[str, Any]) -> None:
     if not args.do_train and not args.do_test:
@@ -184,6 +186,13 @@ def build_model_config(
     return model_config
 
 
+def metrics_str(metrics: Dict[str, float]) -> str:
+    pieces = []
+    for key in metrics:
+        pieces.append("%s: %.4f%%" % (key.capitalize(), metrics[key]))
+    return " | ".join(pieces)
+
+
 def train(
     run_id: str,
     epochs: int,
@@ -239,11 +248,10 @@ def train(
             device=device,
         )
         train_it = tqdm(train_it, desc="├ Train", file=sys.stdout)
-        train_loss, train_acc = model.run_epoch(
-            train_it, optimizer=optimizer, teacher_forcing_ratio=0.5
+        train_loss, train_met = model.run_epoch(
+            train_it, optimizer, teacher_forcing_ratio=0.5
         )
-        train_acc *= 100
-        print("│ └ Loss: %.3f | Acc: %.2f%%" % (train_loss, train_acc))
+        print("│ └ Loss: %.3f | %s" % (train_loss, metrics_str(train_met)))
 
         valid_it = Seq2SeqDataLoader(
             valid_dataset,
@@ -252,25 +260,23 @@ def train(
             device=device,
         )
         valid_it = tqdm(valid_it, desc="└ Valid", file=sys.stdout)
-        valid_loss, valid_acc = model.run_epoch(valid_it)
-        valid_acc *= 100
+        valid_loss, valid_met = model.run_epoch(valid_it)
         if valid_loss >= best_valid_loss or math.isinf(best_valid_loss):
-            print("  └ Loss: %.3f | Acc: %.2f%%" % (valid_loss, valid_acc))
+            print("  └ Loss: %.3f | %s" % (valid_loss, metrics_str(valid_met)))
         else:
             delta_loss = valid_loss - best_valid_loss
             print(
-                "  └ Loss: %.3f (%.3fΔ) | Acc: %.2f%%"
-                % (valid_loss, delta_loss, valid_acc)
+                "  └ Loss: %.3f (%.3fΔ) | %s"
+                % (valid_loss, delta_loss, metrics_str(valid_met))
             )
+
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
             torch.save(model.state_dict(), model_file_path)
 
         with open(metrics_file_path, "a") as handle:
             print(
-                "%d\t%.4f\t%.2f\t%.4f\t%.2f"
-                % (epoch, train_loss, train_acc, valid_loss, valid_acc),
-                file=handle,
+                "%d\t%.4f\t%.4f" % (epoch, train_loss, valid_loss), file=handle,
             )
 
 
@@ -308,9 +314,8 @@ def test(
     )
     test_it = tqdm(test_it, desc="├ Test", file=sys.stdout)
 
-    test_loss, test_acc = model.run_epoch(test_it)
-    test_acc *= 100
-    print("  └ Loss: %.3f | Acc: %.3f%%" % (test_loss, test_acc))
+    test_loss, test_met = model.run_epoch(test_it)
+    print("  └ Loss: %.3f | %s" % (test_loss, metrics_str(test_met)))
 
 
 def main(args: Dict[str, Any]) -> None:

@@ -43,13 +43,13 @@ class Seq2SeqModel(torch.nn.Module):
         self,
         source_seq: torch.Tensor,
         source_length: torch.Tensor,
-        target_seq: torch.Tensor,
-        target_length: torch.Tensor,
-        teacher_forcing_ratio: float,
-    ) -> torch.Tensor:
-        device = target_seq.device
-        batch_size = target_seq.shape[1]
-        target_len = target_seq.shape[0]
+        target_seq: Optional[torch.Tensor] = None,
+        target_length: Optional[torch.Tensor] = None,
+        teacher_forcing_ratio: Optional[float] = 0.0,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        device = source_seq.device
+        batch_size = source_seq.shape[1]
+        target_len = 1 if target_seq is None else target_seq.shape[0]
         output_size = self.decoder.output_dim
         max_len = self.output_seq_max_length
         trf = teacher_forcing_ratio
@@ -63,7 +63,7 @@ class Seq2SeqModel(torch.nn.Module):
             (max_len, batch_size),
             self.pad_token_id,
             dtype=torch.long,
-            device=device
+            device=device,
         )
         preds[0, :] = self.bos_token_id
 
@@ -74,6 +74,7 @@ class Seq2SeqModel(torch.nn.Module):
         # first input to the decoder is the BOS tokens
         input = target_seq[0, :]
 
+        ended = None
         for t in range(1, max_len):
             # insert input token embedding, previous hidden and previous cell
             # states receive output tensor (predictions) and new hidden and cell
@@ -84,13 +85,23 @@ class Seq2SeqModel(torch.nn.Module):
             outputs[t] = output
 
             # decide if we are going to use teacher forcing or not
-            teacher_force = t < target_len and random.random() < trf
+            teacher_force = (
+                t < target_len and trf > 0.0 and random.random() < trf
+            )
 
             # if teacher forcing, use actual next token as next input
             # if not, use predicted token
             pred = output.argmax(dim=-1)
             preds[t] = pred.detach()
             input = target_seq[t] if teacher_force else pred
+
+            if t >= target_len:
+                if ended is None:
+                    ended = preds.eq(self.eos_token_id).sum(0) > 0
+                else:
+                    ended = ended | preds[t].eq(self.eos_token_id)
+                if ended.sum().item() == batch_size:
+                    break
 
         return preds, outputs
 

@@ -49,11 +49,11 @@ class Seq2SeqModel(torch.nn.Module):
         batch_size = target_seq.shape[1]
         target_len = target_seq.shape[0]
         output_size = self.decoder.output_dim
+        max_len = self.output_seq_max_length
+        trf = teacher_forcing_ratio
 
         # tensor to store decoder outputs
-        outputs = torch.zeros(
-            target_len, batch_size, output_size, device=device
-        )
+        outputs = torch.zeros(max_len, batch_size, output_size, device=device)
         outputs[0, :, target_seq[0, 0]] = torch.tensor(1.0)
 
         # last hidden state of the encoder is used as the initial hidden state
@@ -63,7 +63,7 @@ class Seq2SeqModel(torch.nn.Module):
         # first input to the decoder is the BOS tokens
         input = target_seq[0, :]
 
-        for t in range(1, target_len):
+        for t in range(1, max_len):
             # insert input token embedding, previous hidden and previous cell
             # states receive output tensor (predictions) and new hidden and cell
             # states
@@ -73,7 +73,7 @@ class Seq2SeqModel(torch.nn.Module):
             outputs[t] = output
 
             # decide if we are going to use teacher forcing or not
-            teacher_force = random.random() < teacher_forcing_ratio
+            teacher_force = t < target_len and random.random() < trf
 
             # if teacher forcing, use actual next token as next input
             # if not, use predicted token
@@ -112,13 +112,13 @@ class Seq2SeqModel(torch.nn.Module):
                     optimizer.zero_grad()
 
                 # Forward pass through the seq2seq model
-                outputs = self.forward(
-                    src, src_len, trg, trg_len, teacher_forcing_ratio
-                )
+                tfr = teacher_forcing_ratio
+                outputs = self.forward(src, src_len, trg, trg_len, tfr)
 
                 # Calculate and accumulate the loss
+                loss_outputs = outputs[: trg.shape[0], :, :]
                 loss = self.criterion(
-                    outputs.view(-1, outputs.shape[-1]), trg.view(-1)
+                    loss_outputs.view(-1, loss_outputs.shape[-1]), trg.view(-1)
                 )
                 epoch_loss = tuple(map(sum, zip(epoch_loss, (loss.item(), 1))))
 

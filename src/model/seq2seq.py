@@ -156,8 +156,7 @@ class Seq2SeqModel(torch.nn.Module):
                     loss.backward()
                     torch.nn.utils.clip_grad_norm_(self.parameters(), clip)
                     optimizer.step()
-
-                with nullcontext() if optimizer is None else torch.no_grad():
+                else:
                     # Compute additional metrics
                     pred_mask = (pred == self.eos_token_id).cumsum(dim=0) <= 1
                     pred_len = pred_mask.sum(dim=0)
@@ -174,7 +173,7 @@ class Seq2SeqModel(torch.nn.Module):
         for key in metrics:
             metrics[key] = metrics[key][0] / metrics[key][1] * 100
 
-        return total_loss, metrics
+        return total_loss, dict(metrics.items())
 
     def run_prediction(
         self, sequence: torch.Tensor, max_len: int

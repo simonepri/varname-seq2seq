@@ -247,10 +247,17 @@ def train(
             shuffle=True,
             device=device,
         )
-        train_it = tqdm(train_it, desc="├ Train", file=sys.stdout)
-        train_loss, train_met = model.run_epoch(
-            train_it, optimizer, teacher_forcing_ratio=0.5
+        train_it = tqdm(train_it, desc="├ Optim Train", file=sys.stdout)
+        model.run_epoch(train_it, optimizer, teacher_forcing_ratio=0.5)
+
+        train_it = Seq2SeqDataLoader(
+            train_dataset,
+            pad=processor.pad_token_id,
+            batch_size=batch_size,
+            device=device,
         )
+        train_it = tqdm(train_it, desc="├ Eval Train", file=sys.stdout)
+        train_loss, train_met = model.run_epoch(train_it)
         print("│ └ Loss: %.3f | %s" % (train_loss, metrics_str(train_met)))
 
         valid_it = Seq2SeqDataLoader(
@@ -259,7 +266,7 @@ def train(
             batch_size=batch_size,
             device=device,
         )
-        valid_it = tqdm(valid_it, desc="└ Valid", file=sys.stdout)
+        valid_it = tqdm(valid_it, desc="└ Eval Dev", file=sys.stdout)
         valid_loss, valid_met = model.run_epoch(valid_it)
         if valid_loss >= best_valid_loss or math.isinf(best_valid_loss):
             print("  └ Loss: %.3f | %s" % (valid_loss, metrics_str(valid_met)))
@@ -312,7 +319,7 @@ def test(
         batch_size=batch_size,
         device=device,
     )
-    test_it = tqdm(test_it, desc="├ Test", file=sys.stdout)
+    test_it = tqdm(test_it, desc="├ Eval Test", file=sys.stdout)
 
     test_loss, test_met = model.run_epoch(test_it)
     print("  └ Loss: %.3f | %s" % (test_loss, metrics_str(test_met)))

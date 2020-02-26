@@ -72,7 +72,9 @@ class Seq2SeqModel(torch.nn.Module):
         _, hidden = self.encoder(source_seq, source_length)
 
         # first input to the decoder is the BOS tokens
-        input = target_seq[0, :]
+        input = torch.full(
+            (batch_size,), self.bos_token_id, dtype=torch.long, device=device,
+        )
 
         ended = None
         for t in range(1, max_len):
@@ -143,9 +145,9 @@ class Seq2SeqModel(torch.nn.Module):
                 pred, outputs = self.forward(src, src_len, trg, trg_len, tfr)
 
                 # Calculate and accumulate the loss
-                loss_outputs = outputs[: trg.shape[0], :, :]
+                loss_outputs = outputs[1: trg.shape[0], :, :]
                 loss = self.criterion(
-                    loss_outputs.view(-1, loss_outputs.shape[-1]), trg.view(-1)
+                    loss_outputs.view(-1, loss_outputs.shape[-1]), trg[1:].view(-1)
                 )
                 total_loss = tuple(map(sum, zip(total_loss, (loss.item(), 1))))
 

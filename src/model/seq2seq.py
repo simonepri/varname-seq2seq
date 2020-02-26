@@ -1,5 +1,6 @@
 import random
 from contextlib import nullcontext
+from collections import defaultdict
 from typing import *
 
 import editdistance
@@ -8,8 +9,6 @@ import torch
 from model.config import Seq2SeqConfig
 from model.encoders import RNNEncoder
 from model.decoders import RNNDecoder
-
-from utils.torch import find_first
 
 
 class Seq2SeqModel(torch.nn.Module):
@@ -84,13 +83,8 @@ class Seq2SeqModel(torch.nn.Module):
 
         return outputs
 
-    def predict(
-        self, outputs: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        pred = outputs.argmax(dim=-1)
-        _, first_eos = find_first(pred, self.eos_token_id, axis=0)
-        pred_len = first_eos + 1
-        return pred, pred_len
+    def predict(self, outputs: torch.Tensor) -> torch.Tensor:
+        return outputs.argmax(dim=-1)
 
     def count_parameters(self) -> int:
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
@@ -113,7 +107,7 @@ class Seq2SeqModel(torch.nn.Module):
         self.train() if optimizer is not None else self.eval()
 
         total_loss = (0, 0)
-        metrics = {"tacc": (0, 0), "acc": (0, 0), "edist": (0, 0)}
+        metrics = defaultdict(lambda: (0, 0))
         with nullcontext() if optimizer is not None else torch.no_grad():
             for batch in iterator:
                 src, src_len, trg, trg_len = batch
@@ -141,20 +135,23 @@ class Seq2SeqModel(torch.nn.Module):
 
                 with nullcontext() if optimizer is None else torch.no_grad():
                     # Compute additional metrics
-                    pred, pred_len = self.predict(outputs)
-                    tacc = self.__compute_tacc(pred, pred_len, trg, trg_len)
-                    acc = self.__compute_acc(pred, pred_len, trg, trg_len)
-                    edist = self.__compute_edist(pred, pred_len, trg, trg_len)
-                    metrics = {
-                        "tacc": tuple(map(sum, zip(metrics["tacc"], tacc))),
-                        "acc": tuple(map(sum, zip(metrics["acc"], acc))),
-                        "edist": tuple(map(sum, zip(metrics["edist"], edist))),
-                    }
+                    pred = self.predict(outputs)
+                    pred_mask = (pred == self.eos_token_id).cumsum(dim=0) <= 1
+                    pred_len = pred_mask.sum(dim=0)
+                    trg_mask = trg.ne(self.pad_token_id)
+                    new_metrics = self.__compute_metrics(
+                        pred, pred_len, pred_mask, trg, trg_len, trg_mask
+                    )
+                    for key in new_metrics:
+                        metrics[key] = tuple(
+                            map(sum, zip(metrics[key], new_metrics[key]))
+                        )
 
+        total_loss = total_loss[0] / total_loss[1]
         for key in metrics:
             metrics[key] = metrics[key][0] / metrics[key][1] * 100
 
-        return total_loss[0] / total_loss[1], metrics
+        return total_loss, metrics
 
     def run_prediction(
         self, sequence: torch.Tensor, max_len: int
@@ -181,53 +178,41 @@ class Seq2SeqModel(torch.nn.Module):
                 input = pred
         return preds
 
-    def __compute_tacc(
+    def __compute_metrics(
         self,
         pred: torch.Tensor,
         pred_len: torch.Tensor,
+        pred_mask: torch.Tensor,
         trg: torch.Tensor,
         trg_len: torch.Tensor,
-    ) -> Tuple[int, int]:
+        trg_mask: torch.Tensor,
+    ) -> Dict[str, Tuple[int, int]]:
         trg_max_len = trg.shape[0]
-        no_pad = trg.ne(self.pad_token_id)
-        correct = (
-            pred[:trg_max_len, :].eq(trg).masked_select(no_pad).sum().item()
-        )
-        total = no_pad.sum().item()
-        return correct, total
-
-    def __compute_acc(
-        self,
-        pred: torch.Tensor,
-        pred_len: torch.Tensor,
-        trg: torch.Tensor,
-        trg_len: torch.Tensor,
-    ) -> Tuple[int, int]:
         batch_size = pred.shape[1]
+        combined_mask = pred_mask[:trg_max_len] & trg_mask
 
-        correct, total = 0, 0
+        eq = pred[:trg_max_len].eq(trg)
+
+        # Teacher Accuracy
+        tacc_correct = eq.masked_select(trg_mask).sum().item()
+        tacc_total = trg_len.sum().item()
+
+        # Prediction Accuracy
+        acc_correct = eq.masked_select(combined_mask).sum().item()
+        acc_total = torch.max(pred_len, trg_len).sum().item()
+
+        # Edit distance
+        edist_correct, edist_total = acc_total, acc_total
         for b in range(0, batch_size):
-            min_len = min(pred_len[b].item(), trg_len[b].item())
-            max_len = max(pred_len[b].item(), trg_len[b].item())
-            correct += pred[:min_len, b].eq(trg[:min_len, b]).sum().item()
-            total += max_len
-        return correct, total
-
-    def __compute_edist(
-        self,
-        pred: torch.Tensor,
-        pred_len: torch.Tensor,
-        trg: torch.Tensor,
-        trg_len: torch.Tensor,
-    ) -> Tuple[int, int]:
-        batch_size = pred.shape[1]
-
-        correct, total = pred_len.sum().item(), trg_len.sum().item()
-        for b in range(0, batch_size):
-            prediction, target = pred[: pred_len[b], b], trg[: trg_len[b], b]
+            prediction, target = (pred[: pred_len[b], b], trg[: trg_len[b], b])
             edist = editdistance.eval(prediction, target)
-            correct -= edist
-        return correct, total
+            edist_correct -= edist
+
+        return {
+            "tacc": (tacc_correct, tacc_total),
+            "acc": (acc_correct, acc_total),
+            "edist": (edist_correct, edist_total),
+        }
 
     @classmethod
     def from_config(cls, config: Seq2SeqConfig):

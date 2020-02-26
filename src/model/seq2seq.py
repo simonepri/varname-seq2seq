@@ -18,6 +18,8 @@ class Seq2SeqModel(torch.nn.Module):
         eos_token_id: int,
         pad_token_id: int,
         mask_token_id: int,
+        input_seq_max_length: int,
+        output_seq_max_length: int,
     ) -> None:
         super().__init__()
 
@@ -30,6 +32,8 @@ class Seq2SeqModel(torch.nn.Module):
         self.eos_token_id = eos_token_id
         self.pad_token_id = pad_token_id
         self.mask_token_id = mask_token_id
+        self.input_seq_max_length = input_seq_max_length
+        self.output_seq_max_length = output_seq_max_length
 
     # source_seq = [source_seq_len, batch_size]
     # target_seq = [target_seq_len, batch_size]
@@ -204,6 +208,8 @@ class Seq2SeqModel(torch.nn.Module):
             "eos_token_id": config.eos_token_id,
             "pad_token_id": config.pad_token_id,
             "mask_token_id": config.mask_token_id,
+            "input_seq_max_length": config.input_seq_max_length,
+            "output_seq_max_length": config.output_seq_max_length,
         }
 
         return cls(enc, dec, **special_tokens)

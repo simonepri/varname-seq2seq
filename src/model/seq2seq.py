@@ -56,7 +56,16 @@ class Seq2SeqModel(torch.nn.Module):
 
         # tensor to store decoder outputs
         outputs = torch.zeros(max_len, batch_size, output_size, device=device)
-        outputs[0, :, target_seq[0, 0]] = torch.tensor(1.0)
+        outputs[0, :, self.bos_token_id] = torch.tensor(1.0)
+        outputs[1:, :, self.eos_token_id] = torch.tensor(1.0)
+
+        preds = torch.full(
+            (max_len, batch_size),
+            self.pad_token_id,
+            dtype=torch.long,
+            device=device
+        )
+        preds[0, :] = self.bos_token_id
 
         # last hidden state of the encoder is used as the initial hidden state
         # of the decoder
@@ -79,9 +88,11 @@ class Seq2SeqModel(torch.nn.Module):
 
             # if teacher forcing, use actual next token as next input
             # if not, use predicted token
-            input = target_seq[t] if teacher_force else output.argmax(dim=-1)
+            pred = output.argmax(dim=-1)
+            preds[t] = pred.detach()
+            input = target_seq[t] if teacher_force else pred
 
-        return outputs
+        return preds, outputs
 
     def predict(self, outputs: torch.Tensor) -> torch.Tensor:
         return outputs.argmax(dim=-1)
@@ -118,7 +129,7 @@ class Seq2SeqModel(torch.nn.Module):
 
                 # Forward pass through the seq2seq model
                 tfr = teacher_forcing_ratio
-                outputs = self.forward(src, src_len, trg, trg_len, tfr)
+                pred, outputs = self.forward(src, src_len, trg, trg_len, tfr)
 
                 # Calculate and accumulate the loss
                 loss_outputs = outputs[: trg.shape[0], :, :]
@@ -135,7 +146,6 @@ class Seq2SeqModel(torch.nn.Module):
 
                 with nullcontext() if optimizer is None else torch.no_grad():
                     # Compute additional metrics
-                    pred = self.predict(outputs)
                     pred_mask = (pred == self.eos_token_id).cumsum(dim=0) <= 1
                     pred_len = pred_mask.sum(dim=0)
                     trg_mask = trg.ne(self.pad_token_id)

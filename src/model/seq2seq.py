@@ -60,13 +60,13 @@ class Seq2SeqModel(torch.nn.Module):
 
         Args:
             src (torch.long): Tensor of shape [SL, B], representing the source
-                token sequence.
+                token sequences.
             src_len (torch.long): Tensor of shape [B], representing the
-                non-padded length of the source sequences.
+                non-padded length of each source sequence.
             trg (torch.long, optional): Tensor of shape [TL, B], representing
-                the target token sequence.
+                the target token sequences.
             trg_len (torch.long, optional): Tensor of shape [B], representing
-                the non-padded length of the target sequences.
+                the non-padded length of each target sequence.
             teacher_forcing_ratio (float, optional): The percentage of times we
                 use teacher forcing during decoding.
 
@@ -156,14 +156,14 @@ class Seq2SeqModel(torch.nn.Module):
             iterator (iterable): iterator generating:
                 batch (tuple): tuple containing:
                     src (torch.long): Tensor of shape [SL, B], representing the
-                        source token sequence.
+                        source token sequences.
                     src_len (torch.long): Tensor of shape [B], representing
-                        the non-padded length of the source sequences.
+                        the non-padded length of each source sequence.
                     trg (torch.long): Tensor of shape [TL, B],
-                        representing the target token sequence.
+                        representing the target token sequences.
                     trg_len (torch.long): Tensor of shape [B],
-                        representing the non-padded length of the target
-                        sequences.
+                        representing the non-padded length of each target
+                        sequence.
             optimizer (torch.optim.Optimizer): A pytorch optimizer. If not
                 provided we assume we running the model in evaluation mode.
             teacher_forcing_ratio (float, optional): The percentage of times we

@@ -9,6 +9,7 @@ from features.java.ast import JavaAst
 from utils.progress import Progress, ByteProgress
 from utils.strings import lreplace, rreplace
 
+
 def parse_args() -> Dict[str, Any]:
     parser = argparse.ArgumentParser()
 
@@ -16,6 +17,7 @@ def parse_args() -> Dict[str, Any]:
     parser.add_argument("--remove-prefix", type=str, default=":data:")
 
     return parser.parse_args()
+
 
 def validate_args(args: Dict[str, Any]) -> None:
     if os.path.exists(JavaAst.AST_PROTO_DIR):

@@ -145,6 +145,7 @@ def build_processor_config(args: Dict[str, Any]) -> Seq2SeqConfig:
 def count_parameters(model) -> int:
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
+
 def build_model_config(
     processor: Seq2SeqProcessor, args: Dict[str, Any]
 ) -> Seq2SeqConfig:

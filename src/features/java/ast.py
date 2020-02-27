@@ -149,14 +149,11 @@ class JavaAst:
         return edges
 
     @classmethod
-    def setup(
-        cls
-    ) -> None:
+    def setup(cls) -> None:
         if not os.path.isfile(cls.AST_EXTRACTOR_PATH):
             os.makedirs(cls.AST_EXTRACTOR_DIR, exist_ok=True)
             urlretrieve(
-                cls.JAVAC_EXTRACTOR_DOWNLOAD_URL,
-                cls.AST_EXTRACTOR_PATH,
+                cls.JAVAC_EXTRACTOR_DOWNLOAD_URL, cls.AST_EXTRACTOR_PATH,
             )
         os.makedirs(cls.AST_PROTO_DIR, exist_ok=True)
         cls.SETUP = True

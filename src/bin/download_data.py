@@ -7,6 +7,7 @@ from typing import *
 
 from utils.progress import Progress, ByteProgress
 
+
 def parse_args() -> Dict[str, Any]:
     parser = argparse.ArgumentParser()
 
@@ -14,6 +15,7 @@ def parse_args() -> Dict[str, Any]:
     parser.add_argument("--data-path", type=str)
 
     return parser.parse_args()
+
 
 def validate_args(args: Dict[str, Any]) -> None:
     if os.path.exists(args.data_path):

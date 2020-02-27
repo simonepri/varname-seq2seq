@@ -9,6 +9,7 @@ from features.java.ast import JavaAst
 from features.java.extractor import JavaVarExamplesExtractor
 from utils.files import walk_files, rebase_path
 
+
 def parse_args() -> Dict[str, Any]:
     parser = argparse.ArgumentParser()
 
@@ -17,6 +18,7 @@ def parse_args() -> Dict[str, Any]:
     parser.add_argument("--cache-only", default=False, action="store_true")
 
     return parser.parse_args()
+
 
 def validate_args(args: Dict[str, Any]) -> None:
     if not os.path.isdir(args.input_path):

@@ -16,6 +16,7 @@ from model.seq2seq import Seq2SeqModel
 
 EXTRACTORS = {"java": JavaVarExamplesExtractor}
 
+
 def parse_args() -> Dict[str, Any]:
     parser = argparse.ArgumentParser()
 
@@ -23,6 +24,7 @@ def parse_args() -> Dict[str, Any]:
     parser.add_argument("--file-path", type=str)
 
     return parser.parse_args()
+
 
 def validate_args(args: Dict[str, Any]) -> None:
     if extractor_for_file(args.file_path) is None:

@@ -8,6 +8,7 @@ from typing import *
 from features.examples import MaskedVarExample
 from utils.files import walk_files, rebase_path
 
+
 def parse_args() -> Dict[str, Any]:
     parser = argparse.ArgumentParser()
 
@@ -15,6 +16,7 @@ def parse_args() -> Dict[str, Any]:
     parser.add_argument("--output-path", type=str, default="data/groups")
 
     return parser.parse_args()
+
 
 def validate_args(args: Dict[str, Any]) -> None:
     if not os.path.isdir(args.input_path):

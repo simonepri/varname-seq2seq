@@ -8,12 +8,14 @@ from features.java.ast import JavaAst
 from features.java.extractor import JavaLocalVarExamples
 from utils.files import walk_files
 
+
 def parse_args() -> Dict[str, Any]:
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--data-path", type=str, default="data/corpora")
 
     return parser.parse_args()
+
 
 def validate_args(args: Dict[str, Any]) -> None:
     if not os.path.exists(args.data_path):

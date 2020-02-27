@@ -9,6 +9,7 @@ import numpy as np
 
 from utils.random import set_seed
 
+
 def parse_args() -> Dict[str, Any]:
     parser = argparse.ArgumentParser()
 
@@ -18,6 +19,7 @@ def parse_args() -> Dict[str, Any]:
     parser.add_argument("--splits", type=str, default="60,10,30")
 
     return parser.parse_args()
+
 
 def validate_args(args: Dict[str, Any]) -> None:
     if not os.path.isdir(args.input_path):

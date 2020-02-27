@@ -8,6 +8,7 @@ from features.examples import VarExample, MaskedVarExample
 from utils.files import walk_files, rebase_path
 from utils.strings import rreplace
 
+
 def parse_args() -> Dict[str, Any]:
     parser = argparse.ArgumentParser()
 

@@ -227,8 +227,6 @@ def train(
     print("Saving initial model and configs")
     torch.save(model.state_dict(), model_file_path)
     config.save(config_file_path)
-    with open(metrics_file_path, "w+") as handle:
-        print("Epoch\tTrain loss\tTrain acc\tDev loss\tDev acc", file=handle)
 
     print("Loading the training dataset")
     train_data = load_and_cache_data(processor, train_file, cache_path)
@@ -285,10 +283,16 @@ def train(
             best_valid_loss = valid_loss
             torch.save(model.state_dict(), model_file_path)
 
+        if not os.path.exists(metrics_file_path):
+            with open(metrics_file_path, "w+") as handle:
+                train_str = "\t".join("train %s" % m for m in train_met.keys())
+                valid_str = "\t".join("test %s" % m for m in valid_met.keys())
+                print("epoch\t%s\t%s" % (train_str, valid_str), file=handle)
+
         with open(metrics_file_path, "a") as handle:
-            print(
-                "%d\t%.4f\t%.4f" % (epoch, train_loss, valid_loss), file=handle,
-            )
+            train_str = "\t".join("%.4f" % m for m in train_met.values())
+            valid_str = "\t".join("%.4f" % m for m in valid_met.values())
+            print("%d\t%s\t%s" % (epoch, train_str, valid_str), file=handle)
 
 
 def test(

@@ -85,9 +85,7 @@ def main(args: Dict[str, Any]) -> None:
                 masked_example.masked,
             )
             source = source.long().to(device)
-            prediction = model.run_prediction(
-                source, processor.output_seq_max_length
-            )
+            prediction = model.run_prediction(source, source.shape[0])
 
             target = target[1:]
             prediction = prediction[1:]

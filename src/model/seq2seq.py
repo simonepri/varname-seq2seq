@@ -51,9 +51,9 @@ class Seq2SeqModel(torch.nn.Module):
     def forward(
         self,
         src: torch.Tensor,
-        src_length: torch.Tensor,
+        src_len: torch.Tensor,
         trg: Optional[torch.Tensor] = None,
-        trg_length: Optional[torch.Tensor] = None,
+        trg_len: Optional[torch.Tensor] = None,
         teacher_forcing_ratio: Optional[float] = 0.0,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Model forward.
@@ -61,11 +61,11 @@ class Seq2SeqModel(torch.nn.Module):
         Args:
             src (torch.long): Tensor of shape [SL, B], representing the source
                 token sequence.
-            src_length (torch.long): Tensor of shape [B], representing the
+            src_len (torch.long): Tensor of shape [B], representing the
                 non-padded length of the source sequences.
             trg (torch.long, optional): Tensor of shape [TL, B], representing
                 the target token sequence.
-            trg_length (torch.long, optional): Tensor of shape [B], representing
+            trg_len (torch.long, optional): Tensor of shape [B], representing
                 the non-padded length of the target sequences.
             teacher_forcing_ratio (float, optional): The percentage of times we
                 use teacher forcing during decoding.
@@ -73,7 +73,7 @@ class Seq2SeqModel(torch.nn.Module):
         Returns:
             (tuple): tuple containing:
                 predictions (torch.long): Tensor of shape [?, B], containing the
-                    predicted token sequence.
+                    predicted token sequences.
 
                 outputs (torch.float): Tensor of shape [?, B, V], storing the
                     distribution over output symbols for each timestep for each
@@ -101,7 +101,7 @@ class Seq2SeqModel(torch.nn.Module):
 
         # Last hidden state of the encoder is used as the initial hidden state
         # of the decoder.
-        _, hidden = self.encoder(src, src_length)
+        _, hidden = self.encoder(src, src_len)
 
         # The first input of the decoder is the BOS tokens.
         input = torch.full(
@@ -155,13 +155,13 @@ class Seq2SeqModel(torch.nn.Module):
         Args:
             iterator (iterable): iterator generating:
                 batch (tuple): tuple containing:
-                    src: Tensor of shape [SL, B], representing the source
-                        token sequence.
-                    src_length (torch.long): Tensor of shape [B], representing
+                    src (torch.long): Tensor of shape [SL, B], representing the
+                        source token sequence.
+                    src_len (torch.long): Tensor of shape [B], representing
                         the non-padded length of the source sequences.
-                    trg (torch.long, optional): Tensor of shape [TL, B],
+                    trg (torch.long): Tensor of shape [TL, B],
                         representing the target token sequence.
-                    trg_length (torch.long, optional): Tensor of shape [B],
+                    trg_len (torch.long): Tensor of shape [B],
                         representing the non-padded length of the target
                         sequences.
             optimizer (torch.optim.Optimizer): A pytorch optimizer. If not
@@ -229,7 +229,8 @@ class Seq2SeqModel(torch.nn.Module):
                 total_loss = tuple(map(sum, zip(total_loss, (loss.item(), 1))))
 
                 if optimizer is not None:
-                    # Perform backpropatation, clip gradients, and adjust model weights
+                    # Perform backpropatation, clip gradients, and adjust model
+                    # weights
                     loss.backward()
                     torch.nn.utils.clip_grad_norm_(self.parameters(), clip)
                     optimizer.step()
@@ -252,30 +253,32 @@ class Seq2SeqModel(torch.nn.Module):
 
         return total_loss, dict(metrics.items())
 
-    def run_prediction(
-        self, sequence: torch.Tensor, max_len: int
-    ) -> torch.Tensor:
-        device = sequence.device
+    def run_prediction(self, src: torch.Tensor, src_len: int) -> torch.Tensor:
+        """Generate predictions.
 
+        Args:
+            src (torch.long): Tensor of shape [SL], representing the source
+                token sequence.
+            src_len (int): the non-padded length of the source sequence.
+
+        Returns:
+            predictions (torch.long): Tensor of shape [?], containing the
+            predicted token sequence.
+
+        Note:
+            The source tensor is expected to be already on the correct device
+            (i.e. cuda or cpu).
+
+        """
         self.eval()
         with torch.no_grad():
-            src = sequence.unsqueeze(1)
-            src_len = torch.tensor([len(sequence)], device=device)
-            preds = torch.full(
-                (max_len,), self.pad_token_id, dtype=torch.long, device=device
+            src = src.unsqueeze(dim=-1)
+            src_len = torch.full(
+                (1,), src_len, dtype=torch.long, device=src.device
             )
+            pred, _ = self.forward(src, src_len)
 
-            _, hidden = self.encoder(src, src_len)
-            input = torch.tensor([self.bos_token_id], device=device)
-            preds[0] = input[0].item()
-            for t in range(1, max_len):
-                output, hidden = self.decoder(input, hidden)
-                pred = output.argmax(dim=-1)
-                preds[t] = pred.item()
-                if preds[t] == self.eos_token_id:
-                    return preds[: t + 1]
-                input = pred
-        return preds
+        return pred
 
     def __compute_metrics(
         self,

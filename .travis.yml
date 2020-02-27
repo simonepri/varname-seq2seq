@@ -7,7 +7,7 @@ os:
   - osx
   - windows
 install:
-  - pip install pipenv
+  - pip install pipenv --skip-lock
   - pipenv install --dev
 script:
   - pipenv run format --check --diff

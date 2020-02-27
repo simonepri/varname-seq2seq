@@ -37,8 +37,17 @@ class Seq2SeqModel(torch.nn.Module):
         self.input_seq_max_length = input_seq_max_length
         self.output_seq_max_length = output_seq_max_length
 
-    # src = [src_len, batch_size]
-    # trg = [trg_len, batch_size]
+    def name(self) -> str:
+        """The name of the model given the current cofiguration.
+
+        Returns:
+            (str): a string containing the name of the model.
+
+        """
+        enc = self.encoder.name()
+        dec = self.decoder.name()
+        return "seq2seq(%s,%s)" % (enc, dec)
+
     def forward(
         self,
         src: torch.Tensor,
@@ -46,7 +55,42 @@ class Seq2SeqModel(torch.nn.Module):
         trg: Optional[torch.Tensor] = None,
         trg_length: Optional[torch.Tensor] = None,
         teacher_forcing_ratio: Optional[float] = 0.0,
-    ) -> torch.Tensor:
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Model forward.
+
+        Args:
+            src (torch.long): Tensor of shape [SL, B], representing the source
+                token sequence.
+            src_length (torch.long): Tensor of shape [B], representing the
+                non-padded length of the source sequences.
+            trg (torch.long, optional): Tensor of shape [TL, B], representing
+                the target token sequence.
+            trg_length (torch.long, optional): Tensor of shape [B], representing
+                the non-padded length of the target sequences.
+            teacher_forcing_ratio (float, optional): The percentage of times we
+                use teacher forcing during decoding.
+
+        Returns:
+            (tuple): tuple containing:
+                predictions (torch.long): Tensor of shape [?, B], containing the
+                    predicted token sequence.
+
+                outputs (torch.float): Tensor of shape [?, B, V], storing the
+                    distribution over output symbols for each timestep for each
+                    batch element.
+
+        Note:
+            In the source and target token sequences we assume that the first
+            token is the BOS token and that they always contain the EOS token
+            before the padding.
+            The first predicted token is always the BOS token.
+            Insted, the EOS token might not apper in the predictions, meaning
+            that we truncated the decoder output to the maximum output length.
+            When the target sequence is not provided we assume we are in
+            prediction mode, so we keep forwarding inputs to the decoder as long
+            as can.
+
+        """
         device = src.device
 
         teach_len = 1 if trg is None else trg.shape[0]
@@ -75,7 +119,7 @@ class Seq2SeqModel(torch.nn.Module):
 
         # If a target sequence is provided, predict at least teach_len tokens.
         # At each step, we alternate the use of the actual next token as next
-        #  input with the predicted token from the previous step.
+        # input with the predicted token from the previous step.
         for t in range(1, teach_len):
             output, hidden = self.decoder(input.detach(), hidden)
             outputs[t] = output
@@ -99,18 +143,65 @@ class Seq2SeqModel(torch.nn.Module):
 
         return predictions, outputs
 
-    def name(self) -> str:
-        enc = self.encoder.name()
-        dec = self.decoder.name()
-        return "seq2seq(%s,%s)" % (enc, dec)
-
     def run_epoch(
         self,
         iterator: Iterable[Tuple[torch.Tensor, torch.Tensor]],
         optimizer: Optional[torch.optim.Optimizer] = None,
-        teacher_forcing_ratio: float = 0.0,
-        clip: float = 1.0,
+        teacher_forcing_ratio: Optional[float] = 0.0,
+        clip: Optional[float] = 1.0,
     ) -> Tuple[float, Dict[str, float]]:
+        """Run a single epoch.
+
+        Args:
+            iterator (iterable): iterator generating:
+                batch (tuple): tuple containing:
+                    src: Tensor of shape [SL, B], representing the source
+                        token sequence.
+                    src_length (torch.long): Tensor of shape [B], representing
+                        the non-padded length of the source sequences.
+                    trg (torch.long, optional): Tensor of shape [TL, B],
+                        representing the target token sequence.
+                    trg_length (torch.long, optional): Tensor of shape [B],
+                        representing the non-padded length of the target
+                        sequences.
+            optimizer (torch.optim.Optimizer): A pytorch optimizer. If not
+                provided we assume we running the model in evaluation mode.
+            teacher_forcing_ratio (float, optional): The percentage of times we
+                use teacher forcing during decoding. This should not be provided
+                if the optimizer is not provided as well.
+            clip (float, optional): When the optimizer is provided, this value
+                is used to clip the gradients to avoid exploding gradients.
+
+        Returns:
+            (tuple): tuple containing:
+                epoch_loss (float): The average per batch loss of the current
+                    epoch. The value returned during training may differ from
+                    the value in evaluation mode, because we do backpropatation
+                    after every batch.
+                epoch_metrics (dict): A dictionary containing different metrics
+                    for the current epoch. This dictionary is only populated in
+                    evaluation mode (i.e. when an optimizer is not provided).
+                    Metrics returned include:
+                        "tacc": target accuracy, i.e. simple accuracy using
+                        the target sequence.
+                        "acc": similar to "tacc", but it also counts as errors
+                        tokens predicted after the target sequence (i.e. it
+                        penalizes the model when it does not predict the EOS
+                        token correctly).
+                        "edist": percentage of correct token given the
+                        Levenshtein distance between the target and predicted
+                        sequence.
+                    Note that all the metrics include the EOS token in the
+                    computation, so neither of them can never be zero.
+
+        Note:
+            In the source and target token sequences we assume that the first
+            token is the BOS token and that they always contain the EOS token
+            before the padding.
+            The tensor inside the batch are expected to be already on the
+            correct device (i.e. cuda or cpu).
+
+        """
         assert teacher_forcing_ratio == 0.0 or optimizer is not None
         assert 0.0 <= teacher_forcing_ratio and teacher_forcing_ratio <= 1.0
 

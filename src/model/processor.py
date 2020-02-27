@@ -1,6 +1,4 @@
-import os
-import pickle
-from typing import *
+from typing import *  # pylint: disable=W0401,W0614
 
 import torch
 
@@ -41,13 +39,13 @@ class Seq2SeqProcessor:
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         assert len(masked) > 0
 
-        def trunc_to_len(list, max_length, include_pos=0):
-            if len(list) > max_length:
+        def trunc_to_len(seq, max_length, include_pos=0):
+            if len(seq) > max_length:
                 start_pos = max(0, include_pos - max_length // 2)
-                end_pos = min(len(list), start_pos + max_length)
+                end_pos = min(len(seq), start_pos + max_length)
                 start_pos = end_pos - max_length
-                list = list[start_pos:end_pos]
-            return list
+                seq = seq[start_pos:end_pos]
+            return seq
 
         enc_source, enc_target, enc_masks = [], [], []
 
@@ -69,8 +67,8 @@ class Seq2SeqProcessor:
         enc_target.append(self.eos_token_id)
         enc_target = trunc_to_len(enc_target, self.output_seq_max_length)
 
-        enc_source = torch.tensor(enc_source, dtype=torch.int)
-        enc_target = torch.tensor(enc_target, dtype=torch.int)
+        enc_source = torch.Tensor(enc_source, dtype=torch.int)
+        enc_target = torch.Tensor(enc_target, dtype=torch.int)
 
         assert len(enc_source) <= self.input_seq_max_length
         assert len(enc_target) <= self.output_seq_max_length

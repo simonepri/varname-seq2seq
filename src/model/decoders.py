@@ -1,4 +1,4 @@
-from typing import *
+from typing import *  # pylint: disable=W0401,W0614
 
 import torch
 
@@ -35,16 +35,17 @@ class RNNDecoder(torch.nn.Module):
         self.out = torch.nn.Linear(hidden_dim, output_dim)
         self.dropout = torch.nn.Dropout(embedding_dropout)
 
-    # input = [batch_size]
+    # input_seq = [batch_size]
     # hidden = (h_n, c_n) if LSTM or h_n ortherwise
     # h_n = [num_layers, batch_size, hidden_dim]
     # c_n = [num_layers, batch_size, hidden_dim]
-    def forward(self, input, hidden=None):
-        # input = [1, batch_size]
-        input = input.unsqueeze(0)
+    # pylint: disable=W0221
+    def forward(self, input_seq, hidden=None):
+        # input_seq = [1, batch_size]
+        input_seq = input_seq.unsqueeze(0)
 
         # embedded = [1, batch_size, embedding_dim]
-        embedded = self.dropout(self.embedding(input))
+        embedded = self.dropout(self.embedding(input_seq))
 
         # output = [1, batch_size, hidden_dim]
         # hidden = (h_n, c_n) if LSTM or h_n ortherwise

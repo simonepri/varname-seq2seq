@@ -2,7 +2,7 @@
 import argparse
 import re
 import os
-from typing import *
+from typing import *  # pylint: disable=W0401,W0614
 from collections import defaultdict
 
 import numpy as np
@@ -32,7 +32,7 @@ def validate_args(args: Dict[str, Any]) -> None:
             raise ValueError(
                 "The output path must be a folder: %s" % args.output_path
             )
-        elif os.listdir(args.output_path):
+        if os.listdir(args.output_path):
             raise ValueError(
                 "The output path is not empty: %s" % args.output_path
             )
@@ -76,11 +76,10 @@ def main(args: Dict[str, Any]) -> None:
             match = group_info.match(group_path)
             if match is None:
                 continue
-            ml, tl = match.groups()
-            ml, tl = int(ml), int(tl)
+            mtl, ttl = match.groups()
+            mtl, ttl = int(mtl), int(ttl)
             with open(group_path, "r") as file:
                 nlines = sum(1 for line in file)
-                indices = np.arange(nlines)
                 splits = np.random.multinomial(
                     n=1, pvals=[s / 100 for s in args.splits], size=nlines
                 ).argmax(axis=1)
@@ -88,8 +87,8 @@ def main(args: Dict[str, Any]) -> None:
                 for i, line in enumerate(file):
                     dataset_name = dataset_names[splits[i]]
                     dataset_file[dataset_name].write(line)
-                    dataset_stats[dataset_name]["m"][ml] += 1
-                    dataset_stats[dataset_name]["t"][tl] += 1
+                    dataset_stats[dataset_name]["m"][mtl] += 1
+                    dataset_stats[dataset_name]["t"][ttl] += 1
 
     for dataset_name in dataset_names:
         dataset_file[dataset_name].close()
@@ -106,10 +105,10 @@ def main(args: Dict[str, Any]) -> None:
 
 if __name__ == "__main__":
     try:
-        args = parse_args()
+        ARGS = parse_args()
 
-        normalize_args(args)
-        validate_args(args)
-        main(args)
+        normalize_args(ARGS)
+        validate_args(ARGS)
+        main(ARGS)
     except (KeyboardInterrupt, SystemExit):
         print("\nAborted!")

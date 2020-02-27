@@ -1,8 +1,8 @@
 import pickle
-from typing import *
+from typing import *  # pylint: disable=W0401,W0614
 
 
-class Seq2SeqConfig(object):
+class Seq2SeqConfig:
     def __init__(self, **kwargs: Dict[str, Any]):
         for key, value in kwargs.items():
             setattr(self, key, value)

@@ -5,13 +5,12 @@ verify_ssl = true
 
 [scripts]
 bin = "env PYTHONPATH=src pipenv run python3"
-lint = "python3 -m pylint --output-format=colorized src -v"
-lintfix = "python3 -m autopep8 -r src -v -aa -i"
+lint = "python3 -m pylint --output-format=colorized src -v --disable=R0801,R0903,R0914,C0330,C0114,C0115,C0116 --ignore=proto --generated-members=numpy.*,torch.*,re.*"
+format= "python3 -m black src --line-length 80 --exclude proto"
 
 [dev-packages]
 pylint = "*"
 black = "*"
-autopep8 = "*"
 
 [packages]
 protobuf = "*"

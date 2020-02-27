@@ -3,7 +3,7 @@ import argparse
 import os
 import tarfile
 from urllib.request import urlretrieve
-from typing import *
+from typing import *  # pylint: disable=W0401,W0614
 
 from utils.progress import Progress, ByteProgress
 
@@ -23,7 +23,7 @@ def validate_args(args: Dict[str, Any]) -> None:
             raise ValueError(
                 "The data path must be a folder: %s" % args.data_path
             )
-        elif os.listdir(args.data_path):
+        if os.listdir(args.data_path):
             raise ValueError("The data path is not empty: %s" % args.data_path)
 
 
@@ -42,8 +42,8 @@ def main(
         + args.file_name
     )
     destination_path = os.path.join(args.data_path, args.file_name)
-    with ByteProgress(desc=remote_path.split("/")[-1]) as t:
-        urlretrieve(remote_path, destination_path, reporthook=t.update_to)
+    with ByteProgress(desc=remote_path.split("/")[-1]) as pbar:
+        urlretrieve(remote_path, destination_path, reporthook=pbar.update_to)
 
     with tarfile.open(destination_path, "r:gz") as tar:
         num_members = len(tar.getmembers())
@@ -55,10 +55,10 @@ def main(
 
 if __name__ == "__main__":
     try:
-        args = parse_args()
+        ARGS = parse_args()
 
-        normalize_args(args)
-        validate_args(args)
-        main(args)
+        normalize_args(ARGS)
+        validate_args(ARGS)
+        main(ARGS)
     except (KeyboardInterrupt, SystemExit):
         print("\nAborted!")

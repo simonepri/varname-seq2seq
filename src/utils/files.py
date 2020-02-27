@@ -1,5 +1,5 @@
 import os
-from typing import *
+from typing import *  # pylint: disable=W0401,W0614
 from typing import Pattern
 
 from utils.progress import Progress
@@ -8,15 +8,15 @@ from utils.lists import split_by
 
 
 def walk_files(
-    path: str,
+    root_path: str,
     pattern: Optional[Pattern],
     progress: bool = False,
     batch: int = 0,
 ) -> Generator[Tuple[str, List[str]], None, None]:
     if not progress:
-        for path, _, files in os.walk(path):
+        for path, _, files in os.walk(root_path):
             if pattern is not None:
-                files = list(filter(lambda f: pattern.match(f), files))
+                files = list(filter(pattern.match, files))
             if len(files) == 0:
                 continue
             if batch < 1:
@@ -25,9 +25,9 @@ def walk_files(
                 yield path, files_batch
         return
 
-    num_files = sum(len(files) for _, files in walk_files(path, pattern))
+    num_files = sum(len(files) for _, files in walk_files(root_path, pattern))
     with Progress(total=num_files) as pbar:
-        for path, files in walk_files(path, pattern=pattern, batch=batch):
+        for path, files in walk_files(root_path, pattern=pattern, batch=batch):
             pbar.set_description(truncate(path, -32, "…").rjust(32))
             yield path, files
             pbar.update(len(files))

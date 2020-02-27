@@ -3,21 +3,33 @@ import heapq
 import itertools
 from collections import defaultdict
 from subprocess import DEVNULL, STDOUT, check_call, CalledProcessError
-from typing import *
+from typing import *  # pylint: disable=W0401,W0614
 from urllib.request import urlretrieve
 
 import utils.bisect as bisect
 from features.java.proto.graph_pb2 import Graph
-from features.java.proto.graph_pb2 import FeatureNode as JavaAstNodeType
-from features.java.proto.graph_pb2 import FeatureEdge as JavaAstEdgeType
+from features.java.proto.graph_pb2 import FeatureNode
+from features.java.proto.graph_pb2 import FeatureEdge
+
+
+class JavaAstGraph(Graph):
+    pass
+
+
+class JavaAstNodeType(FeatureNode):
+    pass
+
+
+class JavaAstEdgeType(FeatureEdge):
+    pass
 
 
 class JavaAstNode:
     def __init__(
-        self, idx: int, type: int, content: str, startPos: int, endPos: int
+        self, idx: int, node_type: int, content: str, startPos: int, endPos: int
     ) -> None:
         self.idx = idx
-        self.type = type
+        self.type = node_type
         self.content = content
         self.pos = (startPos, endPos)
 
@@ -34,9 +46,9 @@ class JavaAstNode:
 
 class JavaAstEdge:
     def __init__(
-        self, source: JavaAstNode, type: int, destination: JavaAstNode
+        self, source: JavaAstNode, edge_type: int, destination: JavaAstNode
     ) -> None:
-        self.type = type
+        self.type = edge_type
         self.nodes = (source, destination)
 
     def __repr__(self) -> str:
@@ -60,12 +72,12 @@ class JavaAst:
 
     def __init__(self, source_file_path: str) -> None:
         if not JavaAst.SETUP:
-            raise Exception(
+            raise AssertionError(
                 "The AST Parser is not initalized. "
                 + "Run JavaAst.setup() to download the parser."
             )
         proto = JavaAst.__get_proto(source_file_path)
-        graph = Graph()
+        graph = JavaAstGraph()
         graph.ParseFromString(proto)
 
         id_to_idx = {}
@@ -100,24 +112,24 @@ class JavaAst:
 
         while len(edges) > 0:
             edge = edges.pop()
-            srcIdx = id_to_idx[edge.sourceId]
-            dstIdx = id_to_idx[edge.destinationId]
+            src_idx = id_to_idx[edge.sourceId]
+            dst_idx = id_to_idx[edge.destinationId]
             ast_edge = JavaAstEdge(
-                self.nodes[srcIdx], edge.type, self.nodes[dstIdx]
+                self.nodes[src_idx], edge.type, self.nodes[dst_idx]
             )
-            self.adj[srcIdx].append(ast_edge)
+            self.adj[src_idx].append(ast_edge)
 
     def get_nodes(
         self,
-        types: Optional[List[int]] = None,
+        node_types: Optional[List[int]] = None,
         content: Optional[str] = None,
         pos: Tuple[Optional[int], Optional[int]] = (None, None),
     ) -> Iterable[JavaAstNode]:
         parts = []
-        if types is None:
+        if node_types is None:
             splits = [self.nodes]
         else:
-            splits = [self.nodes_by_type[type] for type in types]
+            splits = [self.nodes_by_type[type] for type in node_types]
         for split in splits:
             start, stop = None, None
             if pos[0] is not None:
@@ -135,17 +147,17 @@ class JavaAst:
     def get_edges(
         self,
         node: JavaAstNode,
-        types: Optional[List[int]] = None,
+        edge_types: Optional[List[int]] = None,
         dest_content: Optional[str] = None,
-        dest_types: Optional[List[int]] = None,
+        dest_node_types: Optional[List[int]] = None,
     ) -> Iterable[JavaAstEdge]:
         edges = self.adj[node.idx]
-        if types is not None:
-            edges = filter(lambda e: e.type in types, edges)
+        if edge_types is not None:
+            edges = filter(lambda e: e.type in edge_types, edges)
         if dest_content is not None:
             edges = filter(lambda e: e.nodes[1].content == dest_content, edges)
-        if dest_types is not None:
-            edges = filter(lambda e: e.nodes[1].type in dest_types, edges)
+        if dest_node_types is not None:
+            edges = filter(lambda e: e.nodes[1].type in dest_node_types, edges)
         return edges
 
     @classmethod
@@ -203,8 +215,8 @@ class JavaAst:
     def __get_proto(cls, file_path: str) -> str:
         cls.cache_files([file_path])
         proto_file_path = cls.cache_path_for_file(file_path)
-        with open(proto_file_path, "rb") as f:
-            return f.read()
+        with open(proto_file_path, "rb") as handle:
+            return handle.read()
 
     @classmethod
     def __run_extractor(cls, file_paths: List[str]) -> None:
@@ -217,10 +229,10 @@ class JavaAst:
             "-Xmaxerrs",
             "10000000",
             "-Xplugin:FeaturePlugin",
-            *map(lambda f: os.path.relpath(f), file_paths),
+            *map(os.path.relpath, file_paths),
         ]
         try:
             check_call(cmd, stdout=DEVNULL, stderr=STDOUT)
-        except CalledProcessError as e:
+        except CalledProcessError:
             # This might happen if the files contain unresolved dependencies.
             pass

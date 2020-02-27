@@ -1,18 +1,19 @@
-import os
-from typing import *
+from typing import *  # pylint: disable=W0401,W0614
 
 
 class RobertaTokenizer:
     def __init__(self) -> None:
-        from transformers import RobertaTokenizer
+        # pylint: disable=C0415
+        from transformers import RobertaTokenizer as Tokenizer
 
-        self.tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
+        self.tokenizer = Tokenizer.from_pretrained("roberta-base")
         self.bos_token_id = self.tokenizer.bos_token_id
         self.eos_token_id = self.tokenizer.eos_token_id
         self.pad_token_id = self.tokenizer.pad_token_id
         self.mask_token_id = self.tokenizer.mask_token_id
         self.vocab_size = len(self.tokenizer)
 
+    # pylint: disable=R0201
     def name(self) -> str:
         return "roberta-bpe"
 

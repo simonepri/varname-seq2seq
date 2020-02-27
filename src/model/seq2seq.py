@@ -1,7 +1,7 @@
 import random
 from contextlib import nullcontext
 from collections import defaultdict
-from typing import *
+from typing import *  # pylint: disable=W0401,W0614
 
 import editdistance
 import torch
@@ -48,6 +48,7 @@ class Seq2SeqModel(torch.nn.Module):
         dec = self.decoder.name()
         return "seq2seq(%s,%s)" % (enc, dec)
 
+    # pylint: disable=W0221,W0613
     def forward(
         self,
         src: torch.Tensor,
@@ -104,7 +105,7 @@ class Seq2SeqModel(torch.nn.Module):
         _, hidden = self.encoder(src, src_len)
 
         # The first input of the decoder is the BOS tokens.
-        input = torch.full(
+        input_seq = torch.full(
             (batch_size,), self.bos_token_id, dtype=torch.long, device=device,
         )
         # Tensor to store decoder outputs, the first output is BOS.
@@ -120,25 +121,25 @@ class Seq2SeqModel(torch.nn.Module):
         # If a target sequence is provided, predict at least teach_len tokens.
         # At each step, we alternate the use of the actual next token as next
         # input with the predicted token from the previous step.
-        for t in range(1, teach_len):
-            output, hidden = self.decoder(input.detach(), hidden)
-            outputs[t] = output
+        for i in range(1, teach_len):
+            output, hidden = self.decoder(input_seq.detach(), hidden)
+            outputs[i] = output
             teacher_force = trf > 0.0 and random.random() < trf
             pred = output.argmax(dim=-1)
-            predictions[t] = pred
-            input = trg[t] if teacher_force else pred
+            predictions[i] = pred
+            input_seq = trg[i] if teacher_force else pred
 
         # Keep predicting until all the sequences contain and EOS token or we
         # predicted max_len tokens for all the sequences.
         ended = predictions.eq(self.eos_token_id).sum(dim=0) > 0
-        for t in range(teach_len, max_len):
+        for _ in range(teach_len, max_len):
             if ended.sum().item() == batch_size:
                 break
-            output, hidden = self.decoder(input.detach(), hidden)
+            output, hidden = self.decoder(input_seq.detach(), hidden)
             outputs = torch.cat((outputs, output.unsqueeze(dim=0)), dim=0)
             pred = output.argmax(dim=-1)
             predictions = torch.cat((predictions, pred.unsqueeze(dim=0)), dim=0)
-            input = pred
+            input_seq = pred
             ended = ended | pred.eq(self.eos_token_id)
 
         return predictions, outputs
@@ -203,8 +204,9 @@ class Seq2SeqModel(torch.nn.Module):
 
         """
         assert teacher_forcing_ratio == 0.0 or optimizer is not None
-        assert 0.0 <= teacher_forcing_ratio and teacher_forcing_ratio <= 1.0
+        assert 0.0 <= teacher_forcing_ratio <= 1.0
 
+        # pylint: disable=W0106
         self.train() if optimizer is not None else self.eval()
 
         total_loss = (0, 0)
@@ -280,8 +282,8 @@ class Seq2SeqModel(torch.nn.Module):
 
         return pred
 
+    @staticmethod
     def __compute_metrics(
-        self,
         pred: torch.Tensor,
         pred_len: torch.Tensor,
         pred_mask: torch.Tensor,
@@ -293,20 +295,20 @@ class Seq2SeqModel(torch.nn.Module):
         batch_size = pred.shape[1]
         combined_mask = pred_mask[:trg_max_len] & trg_mask
 
-        eq = pred[:trg_max_len].eq(trg)
+        matching = pred[:trg_max_len].eq(trg)
 
         # Teacher Accuracy
-        tacc_correct = eq.masked_select(trg_mask).sum().item()
+        tacc_correct = matching.masked_select(trg_mask).sum().item()
         tacc_total = trg_len.sum().item()
 
         # Prediction Accuracy
-        acc_correct = eq.masked_select(combined_mask).sum().item()
+        acc_correct = matching.masked_select(combined_mask).sum().item()
         acc_total = torch.max(pred_len, trg_len).sum().item()
 
         # Edit distance
         edist_correct, edist_total = acc_total, acc_total
-        for b in range(0, batch_size):
-            prediction, target = (pred[: pred_len[b], b], trg[: trg_len[b], b])
+        for i in range(0, batch_size):
+            prediction, target = (pred[: pred_len[i], i], trg[: trg_len[i], i])
             edist = editdistance.eval(prediction, target)
             edist_correct -= edist
 

@@ -3,7 +3,7 @@ import argparse
 import os
 import tarfile
 from urllib.request import urlretrieve
-from typing import *
+from typing import *  # pylint: disable=W0401,W0614
 
 from features.java.ast import JavaAst
 from utils.progress import Progress, ByteProgress
@@ -25,7 +25,7 @@ def validate_args(args: Dict[str, Any]) -> None:
             raise ValueError(
                 "The cache path must be a folder: %s" % JavaAst.AST_PROTO_DIR
             )
-        elif os.listdir(JavaAst.AST_PROTO_DIR):
+        if os.listdir(JavaAst.AST_PROTO_DIR):
             raise ValueError(
                 "The cache path is not empty: %s" % JavaAst.AST_PROTO_DIR
             )
@@ -47,8 +47,8 @@ def main(
     )
 
     os.makedirs(JavaAst.AST_PROTO_DIR, exist_ok=True)
-    with ByteProgress(desc=remote_path.split("/")[-1]) as t:
-        urlretrieve(remote_path, destination_path, reporthook=t.update_to)
+    with ByteProgress(desc=remote_path.split("/")[-1]) as pbar:
+        urlretrieve(remote_path, destination_path, reporthook=pbar.update_to)
 
     with tarfile.open(destination_path, "r:gz") as tar:
         num_members = len(tar.getmembers())
@@ -74,10 +74,10 @@ def main(
 
 if __name__ == "__main__":
     try:
-        args = parse_args()
+        ARGS = parse_args()
 
-        normalize_args(args)
-        validate_args(args)
-        main(args)
+        normalize_args(ARGS)
+        validate_args(ARGS)
+        main(ARGS)
     except (KeyboardInterrupt, SystemExit):
         print("\nAborted!")

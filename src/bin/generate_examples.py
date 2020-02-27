@@ -2,7 +2,7 @@
 import argparse
 import os
 import re
-from typing import *
+from typing import *  # pylint: disable=W0401,W0614
 
 from features.examples import VarExample
 from features.java.ast import JavaAst
@@ -31,7 +31,7 @@ def validate_args(args: Dict[str, Any]) -> None:
             raise ValueError(
                 "The output path must be a folder: %s" % args.output_path
             )
-        elif os.listdir(args.output_path):
+        if os.listdir(args.output_path):
             raise ValueError(
                 "The output path is not empty: %s" % args.output_path
             )
@@ -57,9 +57,9 @@ def main(args: Dict[str, Any]) -> None:
                 continue
             try:
                 examples = JavaVarExamplesExtractor.from_source_file(file_path)
-            except Exception as e:
+            except IOError as err:
                 print(end="", flush=True)
-                print(e, flush=True)
+                print(err, flush=True)
                 continue
 
             # Filter out examples that does not have any variable
@@ -72,10 +72,10 @@ def main(args: Dict[str, Any]) -> None:
 
 if __name__ == "__main__":
     try:
-        args = parse_args()
+        ARGS = parse_args()
 
-        normalize_args(args)
-        validate_args(args)
-        main(args)
+        normalize_args(ARGS)
+        validate_args(ARGS)
+        main(ARGS)
     except (KeyboardInterrupt, SystemExit):
         print("\nAborted!")

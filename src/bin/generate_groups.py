@@ -3,7 +3,7 @@ import argparse
 import os
 import re
 import math
-from typing import *
+from typing import *  # pylint: disable=W0401,W0614
 
 from features.examples import MaskedVarExample
 from utils.files import walk_files, rebase_path
@@ -29,7 +29,7 @@ def validate_args(args: Dict[str, Any]) -> None:
             raise ValueError(
                 "The output path must be a folder: %s" % args.output_path
             )
-        elif os.listdir(args.output_path):
+        if os.listdir(args.output_path):
             raise ValueError(
                 "The output path is not empty: %s" % args.output_path
             )
@@ -55,15 +55,17 @@ def main(args: Dict[str, Any]) -> None:
         ):
             for file in files:
                 file_path = os.path.join(path, file)
-                with open(file_path, "r") as f:
-                    for line in f:
+                with open(file_path, "r") as handle:
+                    for line in handle:
                         masked_example = MaskedVarExample.deserialize(line)
                         mask_num = len(masked_example.masked)
                         token_num = len(masked_example.tokens)
-                        ml = int(math.pow(2, math.ceil(math.log(mask_num, 2))))
-                        tl = int(math.pow(2, math.ceil(math.log(token_num, 2))))
+                        mtl = int(math.pow(2, math.ceil(math.log(mask_num, 2))))
+                        ttl = int(
+                            math.pow(2, math.ceil(math.log(token_num, 2)))
+                        )
 
-                        out_file = "m_%d.t_%d.mk.gp.tsv" % (ml, tl)
+                        out_file = "m_%d.t_%d.mk.gp.tsv" % (mtl, ttl)
                         out_file_path = os.path.join(out_path, out_file)
                         with open(out_file_path, "a+") as group_file:
                             group_file.write(line)
@@ -71,10 +73,10 @@ def main(args: Dict[str, Any]) -> None:
 
 if __name__ == "__main__":
     try:
-        args = parse_args()
+        ARGS = parse_args()
 
-        normalize_args(args)
-        validate_args(args)
-        main(args)
+        normalize_args(ARGS)
+        validate_args(ARGS)
+        main(ARGS)
     except (KeyboardInterrupt, SystemExit):
         print("\nAborted!")

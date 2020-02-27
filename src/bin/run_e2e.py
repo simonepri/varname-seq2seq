@@ -1,7 +1,7 @@
 #!/usr/group/env python3
 import argparse
 import os
-from typing import *
+from typing import *  # pylint: disable=W0401,W0614
 
 import torch
 
@@ -108,10 +108,10 @@ def main(args: Dict[str, Any]) -> None:
 
 if __name__ == "__main__":
     try:
-        args = parse_args()
+        ARGS = parse_args()
 
-        normalize_args(args)
-        validate_args(args)
-        main(args)
+        normalize_args(ARGS)
+        validate_args(ARGS)
+        main(ARGS)
     except (KeyboardInterrupt, SystemExit):
         print("\nAborted!")

@@ -1,5 +1,5 @@
 import itertools
-from typing import *
+from typing import *  # pylint: disable=W0401,W0614
 
 
 def split_by(

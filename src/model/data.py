@@ -1,7 +1,5 @@
-import os
-import pickle
 from functools import partial
-from typing import *
+from typing import *  # pylint: disable=W0401,W0614
 
 import torch
 
@@ -88,7 +86,7 @@ class Seq2SeqDataLoader(torch.utils.data.DataLoader):
                 for i, seq in enumerate(sequences):
                     end = lengths[i]
                     padded_seqs[:end, i] = seq[:end]
-            lengths = torch.tensor(lengths, dtype=torch.long, device=device)
+            lengths = torch.Tensor(lengths, dtype=torch.long, device=device)
             return (padded_seqs, lengths)
 
         # sort a list by sequence length (descending order)

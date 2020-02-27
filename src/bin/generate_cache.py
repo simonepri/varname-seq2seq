@@ -2,10 +2,9 @@
 import argparse
 import os
 import re
-from typing import *
+from typing import *  # pylint: disable=W0401,W0614
 
 from features.java.ast import JavaAst
-from features.java.extractor import JavaLocalVarExamples
 from utils.files import walk_files
 
 
@@ -37,20 +36,20 @@ def main(args: Dict[str, Any]) -> None:
 
     pattern = re.compile(r".*\.java$")
     for path, files in walk_files(args.data_path, pattern, progress=True):
-        file_paths = list(map(lambda f: os.path.join(path, f), files))
+        file_paths = list(map(lambda f, p=path: os.path.join(p, f), files))
         try:
             JavaAst.cache_files(file_paths)
-        except Exception as e:
+        except IOError as err:
             print(flush=True, end="")
-            print(e, flush=True)
+            print(err, flush=True)
 
 
 if __name__ == "__main__":
     try:
-        args = parse_args()
+        ARGS = parse_args()
 
-        normalize_args(args)
-        validate_args(args)
-        main(args)
+        normalize_args(ARGS)
+        validate_args(ARGS)
+        main(ARGS)
     except (KeyboardInterrupt, SystemExit):
         print("\nAborted!")

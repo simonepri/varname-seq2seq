@@ -1,5 +1,5 @@
 import sys
-from typing import *
+from typing import *  # pylint: disable=W0401,W0614
 
 from tqdm import tqdm
 
@@ -22,7 +22,9 @@ class ByteProgress(Progress):
         kwds["miniters"] = kwds.get("miniters", 1)
         super(ByteProgress, self).__init__(*args, **kwds)
 
-    def update_to(self, b: int = 1, bsize: int = 1, tsize: int = None) -> None:
+    def update_to(
+        self, bdata: int = 1, bsize: int = 1, tsize: int = None
+    ) -> None:
         if tsize is not None:
             self.total = tsize
-        self.update(b * bsize - self.n)
+        self.update(bdata * bsize - self.n)

@@ -1,5 +1,4 @@
-import ast
-from typing import *
+from typing import *  # pylint: disable=W0401,W0614
 
 from utils.strings import multiple_replace
 
@@ -17,15 +16,15 @@ class Serializable:
     def serialize_to_file(
         cls, file_path: str, examples: List["Serializable"]
     ) -> None:
-        with open(file_path, "w+") as f:
+        with open(file_path, "w+") as handle:
             for example in examples:
-                print(cls.serialize(example), file=f)
+                print(cls.serialize(example), file=handle)
 
     @classmethod
     def deserialize_from_file(cls, file_path: str) -> List["Serializable"]:
         examples = []
-        with open(file_path, "r") as f:
-            for line in f:
+        with open(file_path, "r") as handle:
+            for line in handle:
                 examples.append(cls.deserialize(line))
         return examples
 
@@ -35,6 +34,7 @@ class VarExample(Serializable):
         assert len(tokens) == len(masks)
         self.tokens = tokens
         self.masks = masks
+        self.vids = None
 
     def __iter__(self) -> Iterable[Tuple[str, int]]:
         return zip(self.tokens, self.masks)
@@ -43,11 +43,11 @@ class VarExample(Serializable):
         return len(self.tokens)
 
     def variables(self) -> Set[int]:
-        if hasattr(self, "vars"):
-            return self.vars
-        self.vars = set(self.masks)
-        self.vars.remove(0)
-        return self.vars
+        if self.vids is not None:
+            return self.vids
+        self.vids = set(self.masks)
+        self.vids.remove(0)
+        return self.vids
 
     @classmethod
     def serialize(cls, example: "VarExample") -> str:
@@ -60,7 +60,7 @@ class VarExample(Serializable):
 
     @classmethod
     def deserialize(cls, text: str) -> "VarExample":
-        tokens, masks, vars = [], [], set()
+        tokens, masks, vids = [], [], set()
         parts = text.split("\t")
         for part in parts:
             token, _, varid = part.rpartition(":")
@@ -68,21 +68,21 @@ class VarExample(Serializable):
             varid = int(varid)
             tokens.append(token)
             masks.append(varid)
-            vars.add(varid)
-        vars.remove(0)
+            vids.add(varid)
+        vids.remove(0)
         example = cls(tokens, masks)
-        example.vars = vars
+        example.vids = vids
         return example
 
     @classmethod
     def __encode_token(cls, token: str) -> str:
-        map = {"\n": r"\n", "\r": r"\r", "\t": r"\t"}
-        return multiple_replace(map, token)
+        cmap = {"\n": r"\n", "\r": r"\r", "\t": r"\t"}
+        return multiple_replace(cmap, token)
 
     @classmethod
     def __decode_token(cls, token: str) -> str:
-        map = {r"\n": "\n", r"\r": "\r", r"\t": "\t"}
-        return multiple_replace(map, token)
+        cmap = {r"\n": "\n", r"\r": "\r", r"\t": "\t"}
+        return multiple_replace(cmap, token)
 
 
 class MaskedVarExample(Serializable):
@@ -109,6 +109,7 @@ class MaskedVarExample(Serializable):
         return MaskedVarExample(tokens, masked, target)
 
     @classmethod
+    # pylint: disable=W0221
     def serialize(cls, masked_example: "MaskedVarExample") -> str:
         tokens = "\t".join(map(cls.__encode_token, masked_example.tokens))
         masked = ",".join(map(str, masked_example.masked))
@@ -125,10 +126,10 @@ class MaskedVarExample(Serializable):
 
     @classmethod
     def __encode_token(cls, token: str) -> str:
-        map = {"\n": r"\n", "\r": r"\r", "\t": r"\t"}
-        return multiple_replace(map, token)
+        cmap = {"\n": r"\n", "\r": r"\r", "\t": r"\t"}
+        return multiple_replace(cmap, token)
 
     @classmethod
     def __decode_token(cls, token: str) -> str:
-        map = {r"\n": "\n", r"\r": "\r", r"\t": "\t"}
-        return multiple_replace(map, token)
+        cmap = {r"\n": "\n", r"\r": "\r", r"\t": "\t"}
+        return multiple_replace(cmap, token)

@@ -1,11 +1,10 @@
 #!/usr/group/env python3
 import argparse
-import sys
 import os
 import time
 import math
 import pickle
-from typing import *
+from typing import *  # pylint: disable=W0401,W0614
 
 import torch
 
@@ -130,6 +129,10 @@ def load_and_cache_data(
     return data
 
 
+def count_parameters(model: Seq2SeqModel) -> int:
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
 def build_processor_config(args: Dict[str, Any]) -> Seq2SeqConfig:
     if args.processor_name == "roberta-bpe":
         processor_config = Seq2SeqConfig(
@@ -140,10 +143,6 @@ def build_processor_config(args: Dict[str, Any]) -> Seq2SeqConfig:
     else:
         raise NotImplementedError()
     return processor_config
-
-
-def count_parameters(model) -> int:
-    return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
 def build_model_config(
@@ -205,6 +204,7 @@ def train(
     output_path: str,
     train_file: str,
     valid_file: str,
+    args: Dict[str, Any],
 ) -> None:
     print("Starting training with run id %s" % run_id)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -347,6 +347,7 @@ def main(args: Dict[str, Any]) -> None:
             args.output_path,
             args.train_file,
             args.valid_file,
+            args,
         )
 
     if args.do_test:
@@ -361,10 +362,10 @@ def main(args: Dict[str, Any]) -> None:
 
 if __name__ == "__main__":
     try:
-        args = parse_args()
+        ARGS = parse_args()
 
-        normalize_args(args)
-        validate_args(args)
-        main(args)
+        normalize_args(ARGS)
+        validate_args(ARGS)
+        main(ARGS)
     except (KeyboardInterrupt, SystemExit):
         print("\nAborted!")

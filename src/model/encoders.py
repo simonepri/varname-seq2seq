@@ -1,4 +1,4 @@
-from typing import *
+from typing import *  # pylint: disable=W0401,W0614
 
 import torch
 
@@ -34,14 +34,15 @@ class RNNEncoder(torch.nn.Module):
         )
         self.dropout = torch.nn.Dropout(embedding_dropout)
 
-    # input = [seq_len, batch_size]
+    # input_seq = [seq_len, batch_size]
     # input_len = [batch_size]
     # hidden = (h_n, c_n) if LSTM or h_n ortherwise
     # h_n = [num_layers, batch_size, hidden_dim]
     # c_n = [num_layers, batch_size, hidden_dim]
-    def forward(self, input, input_len, hidden=None):
+    # pylint: disable=W0221
+    def forward(self, input_seq, input_len, hidden=None):
         # embedded = [seq_len, batch_size, embbedding_dim]
-        embedded = self.dropout(self.embedding(input))
+        embedded = self.dropout(self.embedding(input_seq))
 
         # outputs = [seq_len, batch_size, hidden_dim]
         # hidden = (h_n, c_n) if LSTM or h_n ortherwise

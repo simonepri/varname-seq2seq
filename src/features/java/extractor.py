@@ -1,10 +1,9 @@
 from collections import defaultdict
-from typing import *
+from typing import *  # pylint: disable=W0401,W0614
 
 from features.examples import VarExample
 from features.java.ast import (
     JavaAst,
-    JavaAstNode,
     JavaAstEdgeType,
     JavaAstNodeType,
 )
@@ -25,18 +24,20 @@ class JavaVarExamplesExtractor:
 
         # Get methods
         methods_nodes = list(
-            ast.get_nodes(types=NODE_ELEMENT_TYPES, content="METHOD")
+            ast.get_nodes(node_types=NODE_ELEMENT_TYPES, content="METHOD")
         )
 
         # Map local variables and parameters to a numeric id
         var_map = defaultdict(int)
         var_num = 0
-        var_nodes = ast.get_nodes(types=NODE_VAR_TYPES)
+        var_nodes = ast.get_nodes(node_types=NODE_VAR_TYPES)
         memb_nodes = list(
-            ast.get_nodes(types=NODE_ELEMENT_TYPES, content="MEMBER_SELECT")
+            ast.get_nodes(
+                node_types=NODE_ELEMENT_TYPES, content="MEMBER_SELECT"
+            )
         )
         for var_node in var_nodes:
-            edges = ast.get_edges(var_node, types=EDGE_ASYM_TYPES)
+            edges = ast.get_edges(var_node, edge_types=EDGE_ASYM_TYPES)
             idt_nodes = list(map(lambda e: e.nodes[1], edges))
 
             # Filter local variables.
@@ -68,7 +69,7 @@ class JavaVarExamplesExtractor:
         examples = []
         for method_node in methods_nodes:
             token_nodes = list(
-                ast.get_nodes(types=NODE_TOKEN_TYPES, pos=method_node.pos)
+                ast.get_nodes(node_types=NODE_TOKEN_TYPES, pos=method_node.pos)
             )
             tokens = list(map(lambda n: n.content, token_nodes))
             mask = list(map(lambda n: var_map[n.pos[0]], token_nodes))

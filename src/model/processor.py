@@ -67,8 +67,8 @@ class Seq2SeqProcessor:
         enc_target.append(self.eos_token_id)
         enc_target = trunc_to_len(enc_target, self.output_seq_max_length)
 
-        enc_source = torch.Tensor(enc_source, dtype=torch.int)
-        enc_target = torch.Tensor(enc_target, dtype=torch.int)
+        enc_source = torch.tensor(enc_source, dtype=torch.int)
+        enc_target = torch.tensor(enc_target, dtype=torch.int)
 
         assert len(enc_source) <= self.input_seq_max_length
         assert len(enc_target) <= self.output_seq_max_length

@@ -86,7 +86,7 @@ class Seq2SeqDataLoader(torch.utils.data.DataLoader):
                 for i, seq in enumerate(sequences):
                     end = lengths[i]
                     padded_seqs[:end, i] = seq[:end]
-            lengths = torch.Tensor(lengths, dtype=torch.long, device=device)
+            lengths = torch.tensor(lengths, dtype=torch.long, device=device)
             return (padded_seqs, lengths)
 
         # sort a list by sequence length (descending order)

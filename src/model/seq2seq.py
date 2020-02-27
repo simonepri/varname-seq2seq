@@ -37,78 +37,67 @@ class Seq2SeqModel(torch.nn.Module):
         self.input_seq_max_length = input_seq_max_length
         self.output_seq_max_length = output_seq_max_length
 
-    # source_seq = [source_seq_len, batch_size]
-    # target_seq = [target_seq_len, batch_size]
+    # src = [src_len, batch_size]
+    # trg = [trg_len, batch_size]
     def forward(
         self,
-        source_seq: torch.Tensor,
-        source_length: torch.Tensor,
-        target_seq: Optional[torch.Tensor] = None,
-        target_length: Optional[torch.Tensor] = None,
+        src: torch.Tensor,
+        src_length: torch.Tensor,
+        trg: Optional[torch.Tensor] = None,
+        trg_length: Optional[torch.Tensor] = None,
         teacher_forcing_ratio: Optional[float] = 0.0,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        device = source_seq.device
-        batch_size = source_seq.shape[1]
-        target_len = 1 if target_seq is None else target_seq.shape[0]
+    ) -> torch.Tensor:
+        device = src.device
+
+        teach_len = 1 if trg is None else trg.shape[0]
+        batch_size = src.shape[1]
         output_size = self.decoder.output_dim
         max_len = self.output_seq_max_length
         trf = teacher_forcing_ratio
 
-        # tensor to store decoder outputs
-        outputs = torch.zeros(max_len, batch_size, output_size, device=device)
-        outputs[0, :, self.bos_token_id] = torch.tensor(1.0)
-        outputs[1:, :, self.eos_token_id] = torch.tensor(1.0)
+        # Last hidden state of the encoder is used as the initial hidden state
+        # of the decoder.
+        _, hidden = self.encoder(src, src_length)
 
-        preds = torch.full(
-            (max_len, batch_size),
-            self.pad_token_id,
-            dtype=torch.long,
-            device=device,
-        )
-        preds[0, :] = self.bos_token_id
-
-        # last hidden state of the encoder is used as the initial hidden state
-        # of the decoder
-        _, hidden = self.encoder(source_seq, source_length)
-
-        # first input to the decoder is the BOS tokens
+        # The first input of the decoder is the BOS tokens.
         input = torch.full(
             (batch_size,), self.bos_token_id, dtype=torch.long, device=device,
         )
+        # Tensor to store decoder outputs, the first output is BOS.
+        outputs = torch.empty(teach_len, batch_size, output_size, device=device)
+        outputs[0, :, :] = 0.0
+        outputs[0, :, self.bos_token_id] = 1.0
+        # Tensor to store decoder predictions, the first prediction is BOS.
+        predictions = torch.empty(
+            teach_len, batch_size, dtype=torch.long, device=device,
+        )
+        predictions[0, :] = self.bos_token_id
 
-        ended = None
-        for t in range(1, max_len):
-            # insert input token embedding, previous hidden and previous cell
-            # states receive output tensor (predictions) and new hidden and cell
-            # states
+        # If a target sequence is provided, predict at least teach_len tokens.
+        # At each step, we alternate the use of the actual next token as next
+        #  input with the predicted token from the previous step.
+        for t in range(1, teach_len):
             output, hidden = self.decoder(input.detach(), hidden)
-
-            # place predictions in a tensor holding predictions for each token
             outputs[t] = output
-
-            # decide if we are going to use teacher forcing or not
-            teacher_force = (
-                t < target_len and trf > 0.0 and random.random() < trf
-            )
-
-            # if teacher forcing, use actual next token as next input
-            # if not, use predicted token
+            teacher_force = trf > 0.0 and random.random() < trf
             pred = output.argmax(dim=-1)
-            preds[t] = pred.detach()
-            input = target_seq[t] if teacher_force else pred
+            predictions[t] = pred
+            input = trg[t] if teacher_force else pred
 
-            if t >= target_len:
-                if ended is None:
-                    ended = preds.eq(self.eos_token_id).sum(0) > 0
-                else:
-                    ended = ended | preds[t].eq(self.eos_token_id)
-                if ended.sum().item() == batch_size:
-                    break
+        # Keep predicting until all the sequences contain and EOS token or we
+        # predicted max_len tokens for all the sequences.
+        ended = predictions.eq(self.eos_token_id).sum(dim=0) > 0
+        for t in range(teach_len, max_len):
+            if ended.sum().item() == batch_size:
+                break
+            output, hidden = self.decoder(input.detach(), hidden)
+            outputs = torch.cat((outputs, output.unsqueeze(dim=0)), dim=0)
+            pred = output.argmax(dim=-1)
+            predictions = torch.cat((predictions, pred.unsqueeze(dim=0)), dim=0)
+            input = pred
+            ended = ended | pred.eq(self.eos_token_id)
 
-        return preds, outputs
-
-    def predict(self, outputs: torch.Tensor) -> torch.Tensor:
-        return outputs.argmax(dim=-1)
+        return predictions, outputs
 
     def count_parameters(self) -> int:
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
@@ -142,12 +131,12 @@ class Seq2SeqModel(torch.nn.Module):
 
                 # Forward pass through the seq2seq model
                 tfr = teacher_forcing_ratio
-                pred, outputs = self.forward(src, src_len, trg, trg_len, tfr)
+                pred, out = self.forward(src, src_len, trg, trg_len, tfr)
 
                 # Calculate and accumulate the loss
-                loss_outputs = outputs[1: trg.shape[0], :, :]
+                loss_out = out[1 : trg.shape[0], :, :]
                 loss = self.criterion(
-                    loss_outputs.view(-1, loss_outputs.shape[-1]), trg[1:].view(-1)
+                    loss_out.view(-1, loss_out.shape[-1]), trg[1:].view(-1),
                 )
                 total_loss = tuple(map(sum, zip(total_loss, (loss.item(), 1))))
 

@@ -2,6 +2,10 @@
   <b>varname-seq2seq</b>
 </h1>
 <p align="center">
+  <!-- CI - TravisCI -->
+  <a href="https://travis-ci.com/simonepri/varname-seq2seq">
+    <img src="https://img.shields.io/travis/com/simonepri/varname-seq2seq/master.svg" alt="Build Status" />
+  </a>
   <!-- License - MIT -->
   <a href="https://github.com/simonepri/varname-seq2seq/tree/master/license">
     <img src="https://img.shields.io/github/license/simonepri/varname-seq2seq.svg" alt="Project license" />

@@ -7,8 +7,8 @@ os:
   - osx
   - windows
 install:
-  - pip install pipenv --skip-lock
-  - pipenv install --dev
+  - pip install pipenv -qq
+  - pipenv install --dev --skip-lock
 script:
   - pipenv run format --check --diff
   - pipenv run lint --disable=E --exit-zero

@@ -29,7 +29,7 @@ class RNNEncoder(torch.nn.Module):
         self.num_layers = num_layers
 
         self.embedding = torch.nn.Embedding(input_dim, embedding_dim)
-        self.rnn = torch.nn.LSTM(
+        self.rnn = self.rnn_cell(
             embedding_dim, hidden_dim, num_layers, dropout=layers_dropout
         )
         self.dropout = torch.nn.Dropout(embedding_dropout)

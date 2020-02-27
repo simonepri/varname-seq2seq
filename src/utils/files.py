@@ -2,8 +2,7 @@ import os
 from typing import *
 from typing import Pattern
 
-from tqdm import tqdm
-
+from utils.progress import Progress
 from utils.strings import truncate
 from utils.lists import split_by
 
@@ -27,7 +26,7 @@ def walk_files(
         return
 
     num_files = sum(len(files) for _, files in walk_files(path, pattern))
-    with tqdm(total=num_files) as pbar:
+    with Progress(total=num_files) as pbar:
         for path, files in walk_files(path, pattern=pattern, batch=batch):
             pbar.set_description(truncate(path, -32, "…").rjust(32))
             yield path, files

@@ -41,7 +41,7 @@ def normalize_args(args: Dict[str, Any]) -> None:
 
 
 def main(args: Dict[str, Any]) -> None:
-    JavaAst.setup(progress=True)
+    JavaAst.setup()
 
     pattern = re.compile(r".*\.java$")
     for path, files in walk_files(

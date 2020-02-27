@@ -58,7 +58,7 @@ def extractor_for_file(file_path):
 
 
 def main(args: Dict[str, Any]) -> None:
-    JavaAst.setup(progress=True)
+    JavaAst.setup()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

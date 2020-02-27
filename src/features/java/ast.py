@@ -4,12 +4,12 @@ import itertools
 from collections import defaultdict
 from subprocess import DEVNULL, STDOUT, check_call, CalledProcessError
 from typing import *
+from urllib.request import urlretrieve
 
 import utils.bisect as bisect
 from features.java.proto.graph_pb2 import Graph
 from features.java.proto.graph_pb2 import FeatureNode as JavaAstNodeType
 from features.java.proto.graph_pb2 import FeatureEdge as JavaAstEdgeType
-from utils.download import download_url
 
 
 class JavaAstNode:
@@ -149,13 +149,14 @@ class JavaAst:
         return edges
 
     @classmethod
-    def setup(cls, progress: bool = False) -> None:
+    def setup(
+        cls
+    ) -> None:
         if not os.path.isfile(cls.AST_EXTRACTOR_PATH):
             os.makedirs(cls.AST_EXTRACTOR_DIR, exist_ok=True)
-            download_url(
+            urlretrieve(
                 cls.JAVAC_EXTRACTOR_DOWNLOAD_URL,
                 cls.AST_EXTRACTOR_PATH,
-                progress=progress,
             )
         os.makedirs(cls.AST_PROTO_DIR, exist_ok=True)
         cls.SETUP = True

@@ -2,12 +2,11 @@
 import argparse
 import os
 import tarfile
+from urllib.request import urlretrieve
 from typing import *
 
-from tqdm import tqdm
-
 from features.java.ast import JavaAst
-from utils.download import download_url
+from utils.progress import Progress, ByteProgress
 from utils.strings import lreplace, rreplace
 
 def parse_args() -> Dict[str, Any]:
@@ -46,12 +45,12 @@ def main(
     )
 
     os.makedirs(JavaAst.AST_PROTO_DIR, exist_ok=True)
-    download_url(remote_path, destination_path, progress=True)
+    with ByteProgress(desc=remote_path.split("/")[-1]) as t:
+        urlretrieve(remote_path, destination_path, reporthook=t.update_to)
 
     with tarfile.open(destination_path, "r:gz") as tar:
-        for member in tqdm(
-            iterable=tar.getmembers(), total=len(tar.getmembers())
-        ):
+        num_members = len(tar.getmembers())
+        for member in Progress(iterable=tar.getmembers(), total=num_members):
             tar.extract(path=JavaAst.AST_PROTO_DIR, member=member)
 
     os.remove(destination_path)

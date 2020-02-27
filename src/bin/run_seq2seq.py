@@ -16,6 +16,7 @@ from model.data import Seq2SeqDataset, Seq2SeqDataLoader
 from model.processor import Seq2SeqProcessor
 from model.seq2seq import Seq2SeqModel
 from utils.random import set_seed
+from utils.progress import Progress
 
 
 def parse_args() -> Dict[str, Any]:
@@ -123,7 +124,7 @@ def load_and_cache_data(
         examples = MaskedVarExample.deserialize_from_file(dataset_path)
         data = [
             processor.tensorise(example.tokens, example.target, example.masked)
-            for example in tqdm(examples)
+            for example in Progress(examples)
         ]
         with open(cached_file_path, "wb") as handle:
             pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -250,7 +251,7 @@ def train(
             shuffle=True,
             device=device,
         )
-        train_it = tqdm(train_it, desc="├ Optim Train", file=sys.stdout)
+        train_it = Progress(train_it, desc="├ Optim Train")
         model.run_epoch(train_it, optimizer, teacher_forcing_ratio=0.5)
 
         train_it = Seq2SeqDataLoader(
@@ -259,7 +260,7 @@ def train(
             batch_size=batch_size,
             device=device,
         )
-        train_it = tqdm(train_it, desc="├ Eval Train", file=sys.stdout)
+        train_it = Progress(train_it, desc="├ Eval Train")
         train_loss, train_met = model.run_epoch(train_it)
         print("│ └ Loss: %.3f | %s" % (train_loss, metrics_str(train_met)))
 
@@ -269,7 +270,7 @@ def train(
             batch_size=batch_size,
             device=device,
         )
-        valid_it = tqdm(valid_it, desc="└ Eval Dev", file=sys.stdout)
+        valid_it = Progress(valid_it, desc="└ Eval Dev")
         valid_loss, valid_met = model.run_epoch(valid_it)
         if valid_loss >= best_valid_loss or math.isinf(best_valid_loss):
             print("  └ Loss: %.3f | %s" % (valid_loss, metrics_str(valid_met)))
@@ -322,7 +323,7 @@ def test(
         batch_size=batch_size,
         device=device,
     )
-    test_it = tqdm(test_it, desc="├ Eval Test", file=sys.stdout)
+    test_it = Progress(test_it, desc="├ Eval Test")
 
     test_loss, test_met = model.run_epoch(test_it)
     print("  └ Loss: %.3f | %s" % (test_loss, metrics_str(test_met)))

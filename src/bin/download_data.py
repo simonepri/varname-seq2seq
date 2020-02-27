@@ -2,11 +2,10 @@
 import argparse
 import os
 import tarfile
+from urllib.request import urlretrieve
 from typing import *
 
-from tqdm import tqdm
-
-from utils.download import download_url
+from utils.progress import Progress, ByteProgress
 
 def parse_args() -> Dict[str, Any]:
     parser = argparse.ArgumentParser()
@@ -41,12 +40,12 @@ def main(
         + args.file_name
     )
     destination_path = os.path.join(args.data_path, args.file_name)
-    download_url(remote_path, destination_path, progress=True)
+    with ByteProgress(desc=remote_path.split("/")[-1]) as t:
+        urlretrieve(remote_path, destination_path, reporthook=t.update_to)
 
     with tarfile.open(destination_path, "r:gz") as tar:
-        for member in tqdm(
-            iterable=tar.getmembers(), total=len(tar.getmembers())
-        ):
+        num_members = len(tar.getmembers())
+        for member in Progress(iterable=tar.getmembers(), total=num_members):
             tar.extract(path=args.data_path, member=member)
 
     os.remove(destination_path)

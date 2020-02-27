@@ -4,8 +4,6 @@ python:
   - 3.7
 os:
   - linux
-  - osx
-  - windows
 install:
   - pip install pipenv -qq
   - pipenv install --dev --skip-lock

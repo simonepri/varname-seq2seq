@@ -142,6 +142,9 @@ def build_processor_config(args: Dict[str, Any]) -> Seq2SeqConfig:
     return processor_config
 
 
+def count_parameters(model) -> int:
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
 def build_model_config(
     processor: Seq2SeqProcessor, args: Dict[str, Any]
 ) -> Seq2SeqConfig:
@@ -218,7 +221,7 @@ def train(
     config_file_path = os.path.join(run_path, "config.pkl")
     metrics_file_path = os.path.join(run_path, "metrics.tsv")
 
-    print("The model has %d trainable parameters" % model.count_parameters())
+    print("The model has %d trainable parameters" % count_parameters(model))
 
     print("Saving initial model and configs")
     torch.save(model.state_dict(), model_file_path)

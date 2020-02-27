@@ -99,9 +99,6 @@ class Seq2SeqModel(torch.nn.Module):
 
         return predictions, outputs
 
-    def count_parameters(self) -> int:
-        return sum(p.numel() for p in self.parameters() if p.requires_grad)
-
     def name(self) -> str:
         enc = self.encoder.name()
         dec = self.decoder.name()

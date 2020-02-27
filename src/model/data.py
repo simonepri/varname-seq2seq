@@ -86,6 +86,7 @@ class Seq2SeqDataLoader(torch.utils.data.DataLoader):
                 for i, seq in enumerate(sequences):
                     end = lengths[i]
                     padded_seqs[:end, i] = seq[:end]
+            # pylint: disable=E1102
             lengths = torch.tensor(lengths, dtype=torch.long, device=device)
             return (padded_seqs, lengths)
 

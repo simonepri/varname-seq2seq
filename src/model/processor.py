@@ -67,6 +67,7 @@ class Seq2SeqProcessor:
         enc_target.append(self.eos_token_id)
         enc_target = trunc_to_len(enc_target, self.output_seq_max_length)
 
+        # pylint: disable=E1102
         enc_source = torch.tensor(enc_source, dtype=torch.int)
         enc_target = torch.tensor(enc_target, dtype=torch.int)
 

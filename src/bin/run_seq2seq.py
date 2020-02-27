@@ -8,7 +8,6 @@ import pickle
 from typing import *
 
 import torch
-from tqdm import tqdm
 
 from features.examples import MaskedVarExample
 from model.config import Seq2SeqConfig

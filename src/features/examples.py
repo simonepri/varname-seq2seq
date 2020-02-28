@@ -61,7 +61,7 @@ class VarExample(Serializable):
     @classmethod
     def deserialize(cls, text: str) -> "VarExample":
         tokens, masks, vids = [], [], set()
-        parts = text.split("\t")
+        parts = text.strip().split("\t")
         for part in parts:
             token, _, varid = part.rpartition(":")
             token = cls.__decode_token(token)
@@ -118,7 +118,7 @@ class MaskedVarExample(Serializable):
 
     @classmethod
     def deserialize(cls, text: str) -> "MaskedVarExample":
-        tokens, masked, target = text.rsplit("\t", 2)
+        tokens, masked, target = text.strip().rsplit("\t", 2)
         tokens = list(map(cls.__decode_token, tokens.split("\t")))
         masked = list(map(int, masked.split(",")))
         target = cls.__decode_token(target)

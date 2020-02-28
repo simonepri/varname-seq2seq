@@ -287,7 +287,7 @@ def train(
         if not os.path.exists(metrics_file_path):
             with open(metrics_file_path, "w+") as handle:
                 train_str = "\t".join("train %s" % m for m in train_met.keys())
-                valid_str = "\t".join("test %s" % m for m in valid_met.keys())
+                valid_str = "\t".join("dev %s" % m for m in valid_met.keys())
                 print(
                     "epoch\ttrain loss\t%s\tdev loss\t%s"
                     % (train_str, valid_str),

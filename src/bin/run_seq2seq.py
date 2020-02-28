@@ -39,13 +39,13 @@ def parse_args() -> Dict[str, Any]:
 
     parser.add_argument("--rnn-cell", type=str, default="lstm")
     parser.add_argument("--rnn-num-layers", type=int, default=2)
-    parser.add_argument("--rnn-hidden-size", type=int, default=512)
+    parser.add_argument("--rnn-hidden-size", type=int, default=256)
     parser.add_argument("--rnn-layers-dropout", type=float, default=0.5)
     parser.add_argument("--rnn-embedding-size", type=int, default=256)
     parser.add_argument("--rnn-embedding-dropout", type=float, default=0.5)
 
     parser.add_argument("--input-seq-max-length", type=int, default=256)
-    parser.add_argument("--output-seq-max-length", type=int, default=64)
+    parser.add_argument("--output-seq-max-length", type=int, default=32)
 
     parser.add_argument("--do-train", default=False, action="store_true")
     parser.add_argument("--do-test", default=False, action="store_true")

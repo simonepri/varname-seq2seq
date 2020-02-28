@@ -314,8 +314,6 @@ def test(
     print("Starting testing with run id %s" % run_id)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    os.makedirs(output_path, exist_ok=True)
-
     run_path = os.path.join(output_path, run_id)
     config_file_path = os.path.join(run_path, "config.pkl")
     model_file_path = os.path.join(run_path, "model.pt")

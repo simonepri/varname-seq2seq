@@ -287,12 +287,20 @@ def train(
             with open(metrics_file_path, "w+") as handle:
                 train_str = "\t".join("train %s" % m for m in train_met.keys())
                 valid_str = "\t".join("test %s" % m for m in valid_met.keys())
-                print("epoch\t%s\t%s" % (train_str, valid_str), file=handle)
+                print(
+                    "epoch\ttrain loss\t%s\tdev loss\t%s"
+                    % (train_str, valid_str),
+                    file=handle,
+                )
 
         with open(metrics_file_path, "a") as handle:
             train_str = "\t".join("%.4f" % m for m in train_met.values())
             valid_str = "\t".join("%.4f" % m for m in valid_met.values())
-            print("%d\t%s\t%s" % (epoch, train_str, valid_str), file=handle)
+            print(
+                "%d\t%.4f\t%s\t%.4f\t%s"
+                % (epoch, train_loss, train_str, valid_loss, valid_str),
+                file=handle,
+            )
 
 
 def test(

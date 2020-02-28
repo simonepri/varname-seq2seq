@@ -240,7 +240,8 @@ def train(
     best_valid_loss = float("inf")
     epoch_iterator = range(1, epochs + 1)
     for epoch in epoch_iterator:
-        print("¤ Epoch %d / %d" % (epoch, epochs))
+        now = time.strftime("%Y/%m/%d %H:%M:%S")
+        print("¤ Epoch %d / %d - %s" % (epoch, epochs, now))
 
         train_it = Seq2SeqDataLoader(
             train_dataset,

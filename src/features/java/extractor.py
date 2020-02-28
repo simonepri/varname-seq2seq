@@ -31,33 +31,58 @@ class JavaVarExamplesExtractor:
         var_map = defaultdict(int)
         var_num = 0
         var_nodes = ast.get_nodes(node_types=NODE_VAR_TYPES)
+        param_nodes = list(
+            ast.get_nodes(node_types=NODE_FAKE_TYPES, content="PARAMETERS")
+        )
         memb_nodes = list(
             ast.get_nodes(
                 node_types=NODE_ELEMENT_TYPES, content="MEMBER_SELECT"
             )
         )
+        # For each node marked as variable
         for var_node in var_nodes:
             edges = ast.get_edges(var_node, edge_types=EDGE_ASYM_TYPES)
+            # Get all the identifiers
             idt_nodes = list(map(lambda e: e.nodes[1], edges))
 
-            # Filter local variables.
-            skip = False
-            for idt_node in idt_nodes:
-                # TODO: do each query in log(n)
-                if not any(
-                    idt_node.pos[0] >= method_node.pos[0]
-                    and idt_node.pos[1] <= method_node.pos[1]
-                    for method_node in methods_nodes
-                ) or any(
-                    idt_node.pos[0] >= memb_node.pos[0]
-                    and idt_node.pos[1] <= memb_node.pos[1]
-                    for memb_node in memb_nodes
-                ):
-                    # Ignore identifiers that appear outside the method or as
-                    # class fields.
-                    skip = True
-                    break
-            if skip:
+            include = False
+
+            # Include identifiers that appear as method arguments.
+            if not include:
+                for idt_node in idt_nodes:
+                    # TODO: do the query in log(n)
+                    appears_as_parameter = any(
+                        idt_node.pos[0] >= params_node.pos[0]
+                        and idt_node.pos[1] <= params_node.pos[1]
+                        for params_node in param_nodes
+                    )
+                    if appears_as_parameter:
+                        # Always include method parameters
+                        include = True
+                        break
+
+            # Exclude identifiers that are fields or this.
+            if not include:
+                include = True
+                for idt_node in idt_nodes:
+                    # TODO: do each query in log(n)
+                    appears_in_a_method = any(
+                        idt_node.pos[0] >= method_node.pos[0]
+                        and idt_node.pos[1] <= method_node.pos[1]
+                        for method_node in methods_nodes
+                    )
+                    part_of_a_member_select = any(
+                        idt_node.pos[0] >= memb_node.pos[0]
+                        and idt_node.pos[1] <= memb_node.pos[1]
+                        for memb_node in memb_nodes
+                    )
+                    if not appears_in_a_method or part_of_a_member_select:
+                        # Ignore identifiers that appear outside the method or
+                        # as class fields.
+                        include = False
+                        break
+
+            if not include:
                 continue
 
             for idt_node in idt_nodes:

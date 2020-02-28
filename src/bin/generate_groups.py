@@ -40,6 +40,10 @@ def normalize_args(args: Dict[str, Any]) -> None:
     args.output_path = os.path.realpath(args.output_path)
 
 
+def next_pow(exp: int, num: int) -> int:
+    return int(math.pow(exp, math.ceil(math.log(num, exp))))
+
+
 def main(args: Dict[str, Any]) -> None:
     pattern = re.compile(r".*\.mk.tsv$")
 
@@ -58,14 +62,18 @@ def main(args: Dict[str, Any]) -> None:
                 with open(file_path, "r") as handle:
                     for line in handle:
                         masked_example = MaskedVarExample.deserialize(line)
+                        src_num = len(masked_example.tokens)
+                        trg_len = len(masked_example.target)
                         mask_num = len(masked_example.masked)
-                        token_num = len(masked_example.tokens)
-                        mtl = int(math.pow(2, math.ceil(math.log(mask_num, 2))))
-                        ttl = int(
-                            math.pow(2, math.ceil(math.log(token_num, 2)))
-                        )
+                        src_len_bucket = next_pow(2, src_num)
+                        trg_len_bucket = next_pow(2, trg_len)
+                        mask_num_bucket = next_pow(2, mask_num)
 
-                        out_file = "m_%d.t_%d.mk.gp.tsv" % (mtl, ttl)
+                        out_file = "s_%d.t_%d.m_%d.mk.gp.tsv" % (
+                            src_len_bucket,
+                            trg_len_bucket,
+                            mask_num_bucket,
+                        )
                         out_file_path = os.path.join(out_path, out_file)
                         with open(out_file_path, "a+") as group_file:
                             group_file.write(line)

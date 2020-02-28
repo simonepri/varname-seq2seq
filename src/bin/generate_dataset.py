@@ -2,10 +2,12 @@
 import argparse
 import re
 import os
+import sys
 from typing import *  # pylint: disable=W0401,W0614
 from collections import defaultdict
 
 import numpy as np
+from prettytable import PrettyTable
 
 from utils.random import set_seed
 
@@ -17,6 +19,10 @@ def parse_args() -> Dict[str, Any]:
     parser.add_argument("--output-path", type=str, default="data/dataset")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--splits", type=str, default="60,10,30")
+    parser.add_argument("--no-splits", default=False, action="store_true")
+    parser.add_argument("--prefix", type=str, default="")
+    parser.add_argument("--include", type=str, default="")
+    parser.add_argument("--exclude", type=str, default="")
 
     return parser.parse_args()
 
@@ -32,12 +38,8 @@ def validate_args(args: Dict[str, Any]) -> None:
             raise ValueError(
                 "The output path must be a folder: %s" % args.output_path
             )
-        if os.listdir(args.output_path):
-            raise ValueError(
-                "The output path is not empty: %s" % args.output_path
-            )
     if (
-        len(args.splits) != 3
+        (len(args.splits) != 3)
         or any(s < 0 or s > 100 for s in args.splits)
         or sum(args.splits) != 100
     ):
@@ -51,56 +53,82 @@ def normalize_args(args: Dict[str, Any]) -> None:
     args.input_path = os.path.realpath(args.input_path)
     args.output_path = os.path.realpath(args.output_path)
     args.splits = list(map(int, args.splits.split(",")))
+    args.include = [] if args.include == "" else args.include.split(",")
+    args.exclude = [] if args.exclude == "" else args.exclude.split(",")
 
 
 def main(args: Dict[str, Any]) -> None:
     set_seed(args.seed)
     os.makedirs(args.output_path, exist_ok=True)
 
-    dataset_names = ["train", "dev", "test"]
-    dataset_file = {}
-    dataset_stats = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
-    for dataset_name in dataset_names:
-        dataset_path = os.path.join(args.output_path, dataset_name + ".mk.tsv")
-        dataset_file[dataset_name] = open(dataset_path, "w+")
+    ds_names = ["all"] if args.no_splits else ["train", "dev", "test"]
+    if args.prefix != "":
+        ds_names = list(map(lambda n: "%s.%s" % (args.prefix, n), ds_names))
+    ds_file = {}
+    ds_stats = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+    for ds_name in ds_names:
+        dataset_path = os.path.join(args.output_path, ds_name + ".mk.tsv")
+        ds_file[ds_name] = open(dataset_path, "w+")
 
-    group_info = re.compile(r".*m_(\d+)\.t_(\d+)\.mk\.gp\.tsv")
-    for proj in os.listdir(args.input_path):
+    pvals = [1.0] if args.no_splits else [s / 100.0 for s in args.splits]
+    group_info = re.compile(r".*s_(\d+)\.t_(\d+)\.m_(\d+)\.mk\.gp\.tsv")
+    projects = (
+        os.listdir(args.input_path) if len(args.include) == 0 else args.include
+    )
+    for proj in projects:
         proj_base = os.path.join(args.input_path, proj)
-        if not os.path.isdir(proj_base):
+        if proj in args.exclude or not os.path.isdir(proj_base):
             continue
-        for group in os.listdir(proj_base):
-            group_path = os.path.join(proj_base, group)
+        for group_file in os.listdir(proj_base):
+            group_path = os.path.join(proj_base, group_file)
             if not os.path.isfile(group_path):
                 continue
             match = group_info.match(group_path)
             if match is None:
                 continue
-            mtl, ttl = match.groups()
-            mtl, ttl = int(mtl), int(ttl)
+            groups = match.groups()
+            src_len_bucket = int(groups[0])
+            trg_len_bucket = int(groups[1])
+            mask_num_bucket = int(groups[2])
             with open(group_path, "r") as file:
                 nlines = sum(1 for line in file)
                 splits = np.random.multinomial(
-                    n=1, pvals=[s / 100 for s in args.splits], size=nlines
+                    n=1, pvals=pvals, size=nlines
                 ).argmax(axis=1)
                 file.seek(0)
                 for i, line in enumerate(file):
-                    dataset_name = dataset_names[splits[i]]
-                    dataset_file[dataset_name].write(line)
-                    dataset_stats[dataset_name]["m"][mtl] += 1
-                    dataset_stats[dataset_name]["t"][ttl] += 1
+                    ds_name = ds_names[splits[i]]
+                    ds_file[ds_name].write(line)
+                    ds_stats[ds_name]["s"][src_len_bucket] += 1
+                    ds_stats[ds_name]["t"][trg_len_bucket] += 1
+                    ds_stats[ds_name]["m"][mask_num_bucket] += 1
 
-    for dataset_name in dataset_names:
-        dataset_file[dataset_name].close()
+    for ds_name in ds_names:
+        ds_file[ds_name].close()
 
-    for dataset_name in dataset_names:
-        masks = dataset_stats[dataset_name]["m"]
-        masks = dict(sorted(masks.items(), key=lambda e: e[0]))
-        print(dataset_name, "m", masks)
+    for metric in ["s", "t", "m"]:
+        tab = PrettyTable()
+        tab.field_names = [
+            "# of %s" % metric,
+            *["%s" % ds_name for ds_name in ds_names],
+            "total",
+        ]
+        low, hig = sys.maxsize, 0
+        for ds_name in ds_names:
+            values = ds_stats[ds_name][metric].keys()
+            low, hig = min(low, min(*values)), max(hig, max(*values))
 
-        tokens = dataset_stats[dataset_name]["t"]
-        tokens = dict(sorted(tokens.items(), key=lambda e: e[0]))
-        print(dataset_name, "t", tokens)
+        while low <= hig:
+            values = [ds_stats[ds_name][metric][low] for ds_name in ds_names]
+            total = sum(values)
+            row = (
+                "(%d, %d]" % (low // 2, low),
+                *["%d" % v for v in values],
+                "%d" % total,
+            )
+            tab.add_row(row)
+            low *= 2
+        print(tab)
 
 
 if __name__ == "__main__":

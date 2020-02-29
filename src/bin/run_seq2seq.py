@@ -257,9 +257,9 @@ def train(
                 if args.rnn_tf_ratio == "auto"
                 else float(args.rnn_tf_ratio)
             )
-            train_it = Progress(train_it, desc="├ Optim Train")
             lrs = [group['lr'] for group in optimizer.param_groups]
-            print("├ Config {l-rates = %s, tf-rate = %.3f}" % (lrs, tfr))
+            print("├ Config: {l-rates = %s, tf-rate = %.3f}" % (lrs, tfr))
+            train_it = Progress(train_it, desc="├ Optim Train")
             model.run_epoch(train_it, optimizer, teacher_forcing_ratio=tfr)
 
         train_it = Seq2SeqDataLoader(

@@ -238,20 +238,21 @@ def train(
 
     optimizer = torch.optim.Adam(model.parameters())
     best_valid_loss = float("inf")
-    epoch_iterator = range(1, epochs + 1)
+    epoch_iterator = range(0, epochs + 1)
     for epoch in epoch_iterator:
         now = time.strftime("%Y/%m/%d %H:%M:%S")
         print("¤ Epoch %d / %d - %s" % (epoch, epochs, now))
 
-        train_it = Seq2SeqDataLoader(
-            train_dataset,
-            pad=processor.pad_token_id,
-            batch_size=batch_size,
-            shuffle=True,
-            device=device,
-        )
-        train_it = Progress(train_it, desc="├ Optim Train")
-        model.run_epoch(train_it, optimizer, teacher_forcing_ratio=0.5)
+        if epoch > 0:
+            train_it = Seq2SeqDataLoader(
+                train_dataset,
+                pad=processor.pad_token_id,
+                batch_size=batch_size,
+                shuffle=True,
+                device=device,
+            )
+            train_it = Progress(train_it, desc="├ Optim Train")
+            model.run_epoch(train_it, optimizer, teacher_forcing_ratio=0.5)
 
         train_it = Seq2SeqDataLoader(
             train_dataset,

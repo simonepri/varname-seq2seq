@@ -241,7 +241,7 @@ def train(
     valid_data = load_and_cache_data(processor, valid_file, cache_path)
     valid_dataset = Seq2SeqDataset(valid_data)
 
-    optimizer = torch.optim.Adam([{'params': model.parameters()}])
+    optimizer = torch.optim.Adam([{"params": model.parameters()}])
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, patience=args.scheduler_patience
     )

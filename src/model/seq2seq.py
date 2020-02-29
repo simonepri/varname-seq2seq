@@ -345,7 +345,7 @@ class Seq2SeqModel(torch.nn.Module):
 
     @staticmethod
     def __cat_directions(h: torch.Tensor) -> torch.Tensor:
-        return torch.cat([h[0:h.size(0):2], h[1:h.size(0):2]], dim=-1)
+        return torch.cat([h[0 : h.size(0) : 2], h[1 : h.size(0) : 2]], dim=-1)
 
     @classmethod
     def from_config(cls, config: Seq2SeqConfig):

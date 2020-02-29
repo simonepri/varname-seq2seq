@@ -45,6 +45,8 @@ def parse_args() -> Dict[str, Any]:
     parser.add_argument("--rnn-embedding-dropout", type=float, default=0.5)
     parser.add_argument("--rnn-tf-ratio", type=str, default="auto")
 
+    parser.add_argument("--scheduler-patience", type=int, default=5)
+
     parser.add_argument("--input-seq-max-length", type=int, default=256)
     parser.add_argument("--output-seq-max-length", type=int, default=32)
 
@@ -238,6 +240,9 @@ def train(
     valid_dataset = Seq2SeqDataset(valid_data)
 
     optimizer = torch.optim.Adam([{'params': model.parameters()}])
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, patience=args.scheduler_patience
+    )
     best_valid_loss = float("inf")
     epoch_iterator = range(0, epochs + 1)
     for epoch in epoch_iterator:
@@ -288,6 +293,9 @@ def train(
                 "  └ Loss: %.3f (%.3fΔ) | %s"
                 % (valid_loss, delta_loss, metrics_str(valid_met))
             )
+
+        if epoch > 0:
+            scheduler.step(valid_loss)
 
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss

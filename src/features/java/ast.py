@@ -7,10 +7,12 @@ from typing import *  # pylint: disable=W0401,W0614
 from urllib.request import urlretrieve
 
 import utils.bisect as bisect
+
 # pylint: disable=W0611
 from features.java.proto.graph_pb2 import Graph as JavaAstGraph
 from features.java.proto.graph_pb2 import FeatureNode as JavaAstNodeType
 from features.java.proto.graph_pb2 import FeatureEdge as JavaAstEdgeType
+
 # pylint: enable=W0611
 
 

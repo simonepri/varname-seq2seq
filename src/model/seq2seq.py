@@ -28,6 +28,15 @@ class Seq2SeqModel(torch.nn.Module):
         self.encoder = encoder
         self.decoder = decoder
 
+        if encoder.bidirectional or encoder.hidden_dim != decoder.hidden_dim:
+            from_hid = encoder.hidden_dim * (int(encoder.bidirectional) + 1)
+            to_hid = decoder.hidden_dim
+            self.enc_ph = torch.nn.Linear(from_hid, to_hid)
+            self.enc_po = torch.nn.Linear(from_hid, to_hid)
+            self.proj_needed = True
+        else:
+            self.proj_needed = False
+
         self.criterion = torch.nn.CrossEntropyLoss(ignore_index=pad_token_id)
 
         self.bos_token_id = bos_token_id
@@ -103,6 +112,22 @@ class Seq2SeqModel(torch.nn.Module):
         # Last hidden state of the encoder is used as the initial hidden state
         # of the decoder.
         _, hidden = self.encoder(src, src_len)
+
+        # If the encoder is bidirectional we concatenate the two directions.
+        if self.encoder.bidirectional:
+            if isinstance(hidden, tuple):
+                hidden = tuple(self.__cat_directions(h) for h in hidden)
+            else:
+                hidden = self.__cat_directions(hidden)
+
+        # If the hidden dimension of the encoder does not match the decoder,
+        # fed them through a linear layer to reduce/augment the demensionality.
+        if self.proj_needed:
+            if isinstance(hidden, tuple):
+                hidden = tuple(torch.tanh(self.enc_ph(h)) for h in hidden)
+            else:
+                hidden = torch.tanh(self.enc_ph(hidden))
+            _ = torch.tanh(self.enc_po(_))
 
         # The first input of the decoder is the BOS tokens.
         input_seq = torch.full(
@@ -317,6 +342,10 @@ class Seq2SeqModel(torch.nn.Module):
             "acc": (acc_correct, acc_total),
             "edist": (edist_correct, edist_total),
         }
+
+    @staticmethod
+    def __cat_directions(h: torch.Tensor) -> torch.Tensor:
+        return torch.cat([h[0:h.size(0):2], h[1:h.size(0):2]], dim=-1)
 
     @classmethod
     def from_config(cls, config: Seq2SeqConfig):

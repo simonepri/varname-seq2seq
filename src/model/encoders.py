@@ -13,6 +13,7 @@ class RNNEncoder(torch.nn.Module):
         rnn_cell="lstm",
         embedding_dropout=0.0,
         layers_dropout=0.0,
+        bidirectional=True,
     ):
         super(RNNEncoder, self).__init__()
 
@@ -27,27 +28,32 @@ class RNNEncoder(torch.nn.Module):
         self.embedding_dim = embedding_dim
         self.hidden_dim = hidden_dim
         self.num_layers = num_layers
+        self.bidirectional = bidirectional
 
         self.embedding = torch.nn.Embedding(input_dim, embedding_dim)
         self.rnn = self.rnn_cell(
-            embedding_dim, hidden_dim, num_layers, dropout=layers_dropout
+            embedding_dim,
+            hidden_dim,
+            num_layers,
+            dropout=layers_dropout,
+            bidirectional=bidirectional,
         )
         self.dropout = torch.nn.Dropout(embedding_dropout)
 
     # input_seq = [seq_len, batch_size]
     # input_len = [batch_size]
     # hidden = (h_n, c_n) if LSTM or h_n ortherwise
-    # h_n = [num_layers, batch_size, hidden_dim]
-    # c_n = [num_layers, batch_size, hidden_dim]
+    # h_n = [num_layers * num_directions, batch_size, hidden_dim]
+    # c_n = [num_layers * num_directions, batch_size, hidden_dim]
     # pylint: disable=W0221
     def forward(self, input_seq, input_len, hidden=None):
         # embedded = [seq_len, batch_size, embbedding_dim]
         embedded = self.dropout(self.embedding(input_seq))
 
-        # outputs = [seq_len, batch_size, hidden_dim]
+        # outputs = [seq_len, batch_size, hidden_dim  * num_directions]
         # hidden = (h_n, c_n) if LSTM or h_n ortherwise
-        # h_n = [num_layers, batch_size, hidden_dim]
-        # c_n = [num_layers, batch_size, hidden_dim]
+        # h_n = [num_layers * num_directions, batch_size, hidden_dim]
+        # c_n = [num_layers * num_directions, batch_size, hidden_dim]
         packed_embedded = torch.nn.utils.rnn.pack_padded_sequence(
             embedded, input_len
         )

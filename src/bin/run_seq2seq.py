@@ -43,6 +43,7 @@ def parse_args() -> Dict[str, Any]:
     parser.add_argument("--rnn-layers-dropout", type=float, default=0.5)
     parser.add_argument("--rnn-embedding-size", type=int, default=256)
     parser.add_argument("--rnn-embedding-dropout", type=float, default=0.5)
+    parser.add_argument("--rnn-bidirectional", default=True)
     parser.add_argument("--rnn-tf-ratio", type=str, default="auto")
 
     parser.add_argument("--scheduler-patience", type=int, default=5)
@@ -161,6 +162,7 @@ def build_model_config(
             num_layers=args.rnn_num_layers,
             layers_dropout=args.rnn_layers_dropout,
             embedding_dropout=args.rnn_embedding_dropout,
+            bidirectional=args.rnn_bidirectional,
         )
     else:
         raise NotImplementedError()

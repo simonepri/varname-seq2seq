@@ -43,6 +43,7 @@ def parse_args() -> Dict[str, Any]:
     parser.add_argument("--rnn-layers-dropout", type=float, default=0.5)
     parser.add_argument("--rnn-embedding-size", type=int, default=256)
     parser.add_argument("--rnn-embedding-dropout", type=float, default=0.5)
+    parser.add_argument("--rnn-tf-ratio", type=str, default="auto")
 
     parser.add_argument("--input-seq-max-length", type=int, default=256)
     parser.add_argument("--output-seq-max-length", type=int, default=32)
@@ -251,8 +252,14 @@ def train(
                 shuffle=True,
                 device=device,
             )
+            tfr = (
+                0.05 ** ((epoch - 1) / epochs)
+                if args.rnn_tf_ratio == "auto"
+                else float(args.rnn_tf_ratio)
+            )
+            print("├ Config {tf-rate = %.3f}" % tfr)
             train_it = Progress(train_it, desc="├ Optim Train")
-            model.run_epoch(train_it, optimizer, teacher_forcing_ratio=0.5)
+            model.run_epoch(train_it, optimizer, teacher_forcing_ratio=tfr)
 
         train_it = Seq2SeqDataLoader(
             train_dataset,

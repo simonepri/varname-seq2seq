@@ -237,7 +237,7 @@ def train(
     valid_data = load_and_cache_data(processor, valid_file, cache_path)
     valid_dataset = Seq2SeqDataset(valid_data)
 
-    optimizer = torch.optim.Adam(model.parameters())
+    optimizer = torch.optim.Adam([{'params': model.parameters()}])
     best_valid_loss = float("inf")
     epoch_iterator = range(0, epochs + 1)
     for epoch in epoch_iterator:
@@ -257,8 +257,9 @@ def train(
                 if args.rnn_tf_ratio == "auto"
                 else float(args.rnn_tf_ratio)
             )
-            print("├ Config {tf-rate = %.3f}" % tfr)
             train_it = Progress(train_it, desc="├ Optim Train")
+            lrs = [group['lr'] for group in optimizer.param_groups]
+            print("├ Config {l-rates = %s, tf-rate = %.3f}" % (lrs, tfr))
             model.run_epoch(train_it, optimizer, teacher_forcing_ratio=tfr)
 
         train_it = Seq2SeqDataLoader(

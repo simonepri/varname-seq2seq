@@ -260,11 +260,11 @@ def train(
                 device=device,
             )
             tfr = (
-                0.05 ** ((epoch - 1) / epochs)
+                0.05 ** ((epoch - 1) / (epochs - 1))
                 if args.rnn_tf_ratio == "auto"
                 else float(args.rnn_tf_ratio)
             )
-            lrs = [group['lr'] for group in optimizer.param_groups]
+            lrs = [group["lr"] for group in optimizer.param_groups]
             print("├ Config: {l-rates = %s, tf-rate = %.3f}" % (lrs, tfr))
             train_it = Progress(train_it, desc="├ Optim Train")
             model.run_epoch(train_it, optimizer, teacher_forcing_ratio=tfr)

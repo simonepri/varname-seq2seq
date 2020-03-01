@@ -358,6 +358,7 @@ class Seq2SeqModel(torch.nn.Module):
                 layers_dropout=config.encoder.layers_dropout,
                 embedding_dropout=config.encoder.embedding_dropout,
                 rnn_cell=config.encoder.rnn_cell,
+                bidirectional=config.encoder.bidirectional,
             )
         else:
             raise NotImplementedError()

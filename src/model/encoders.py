@@ -13,7 +13,7 @@ class RNNEncoder(torch.nn.Module):
         rnn_cell="lstm",
         embedding_dropout=0.0,
         layers_dropout=0.0,
-        bidirectional=True,
+        bidirectional=False,
     ):
         super(RNNEncoder, self).__init__()
 

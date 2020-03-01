@@ -4,6 +4,7 @@ import os
 import time
 import math
 import pickle
+from distutils.util import strtobool
 from typing import *  # pylint: disable=W0401,W0614
 
 import torch
@@ -43,7 +44,7 @@ def parse_args() -> Dict[str, Any]:
     parser.add_argument("--rnn-layers-dropout", type=float, default=0.5)
     parser.add_argument("--rnn-embedding-size", type=int, default=256)
     parser.add_argument("--rnn-embedding-dropout", type=float, default=0.5)
-    parser.add_argument("--rnn-bidirectional", default=True)
+    parser.add_argument("--rnn-bidirectional", type=strtobool, default=False)
     parser.add_argument("--rnn-tf-ratio", type=str, default="auto")
 
     parser.add_argument("--scheduler-patience", type=int, default=5)

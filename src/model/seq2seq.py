@@ -28,9 +28,9 @@ class Seq2SeqModel(torch.nn.Module):
         self.encoder = encoder
         self.decoder = decoder
 
-        if encoder.bidirectional or encoder.hidden_dim != decoder.hidden_dim:
-            from_hid = encoder.hidden_dim * (int(encoder.bidirectional) + 1)
-            to_hid = decoder.hidden_dim
+        from_hid = encoder.hidden_dim * (int(encoder.bidirectional) + 1)
+        to_hid = decoder.hidden_dim
+        if from_hid != to_hid:
             self.enc_ph = torch.nn.Linear(from_hid, to_hid)
             self.enc_po = torch.nn.Linear(from_hid, to_hid)
             self.proj_needed = True

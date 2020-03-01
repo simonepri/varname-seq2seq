@@ -108,6 +108,7 @@ def normalize_args(args: Dict[str, Any]) -> None:
     args.test_file = os.path.realpath(args.test_file)
     args.output_path = os.path.realpath(args.output_path)
     args.cache_path = os.path.realpath(args.cache_path)
+    args.rnn_bidirectional = bool(args.rnn_bidirectional)
 
     if args.run_id == "" and args.do_train:
         args.run_id = time.strftime("%Y-%m-%d-%H-%M-%S")

@@ -14,6 +14,7 @@ def parse_args() -> Dict[str, Any]:
 
     parser.add_argument("--input-path", type=str, default="data/examples")
     parser.add_argument("--output-path", type=str, default="data/masked")
+    parser.add_argument("--obfuscate", default=False, action="store_true")
 
     return parser.parse_args()
 
@@ -57,7 +58,7 @@ def main(args: Dict[str, Any]) -> None:
                 with open(out_file_path, "w+") as handle:
                     for varid_to_mask in example.variables():
                         masked_example = MaskedVarExample.mask(
-                            example, varid_to_mask
+                            example, varid_to_mask, obfuscate=args.obfuscate
                         )
                         masked_example_str = MaskedVarExample.serialize(
                             masked_example

@@ -22,6 +22,7 @@ def parse_args() -> Dict[str, Any]:
 
     parser.add_argument("--model-path", type=str)
     parser.add_argument("--file-path", type=str)
+    parser.add_argument("--obfuscate", default=False, action="store_true")
 
     return parser.parse_args()
 
@@ -80,7 +81,9 @@ def main(args: Dict[str, Any]) -> None:
             return
 
         for j, varid_to_mask in enumerate(example.variables()):
-            masked_example = MaskedVarExample.mask(example, varid_to_mask)
+            masked_example = MaskedVarExample.mask(
+                example, varid_to_mask, obfuscate=args.obfuscate
+            )
             source, target = processor.tensorise(
                 masked_example.tokens,
                 masked_example.target,

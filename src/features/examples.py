@@ -95,8 +95,9 @@ class MaskedVarExample(Serializable):
 
     @classmethod
     def mask(
-        cls, example: "VarExample", varid_to_mask: int
+        cls, example: "VarExample", varid_to_mask: int, obfuscate: bool = False
     ) -> "MaskedVarExample":
+        varid_map = {}
         tokens, masked, target = [], [], None
         for i, (token, varid) in enumerate(example):
             if varid == varid_to_mask:
@@ -105,7 +106,11 @@ class MaskedVarExample(Serializable):
                 if target is None:
                     target = token
             else:
-                tokens.append(token)
+                if varid > 0 and obfuscate:
+                    varid_map[varid] = varid_map.get(varid, len(varid_map))
+                    tokens.append("VAR%d" % varid_map[varid])
+                else:
+                    tokens.append(token)
         return MaskedVarExample(tokens, masked, target)
 
     @classmethod

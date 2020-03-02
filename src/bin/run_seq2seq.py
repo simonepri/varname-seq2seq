@@ -3,6 +3,7 @@ import argparse
 import os
 import time
 import math
+import logging
 import pickle
 from distutils.util import strtobool
 from typing import *  # pylint: disable=W0401,W0614
@@ -390,6 +391,8 @@ def main(args: Dict[str, Any]) -> None:
 
 if __name__ == "__main__":
     try:
+        logging.basicConfig(level=logging.NOTSET)
+
         ARGS = parse_args()
 
         normalize_args(ARGS)

@@ -111,6 +111,9 @@ def normalize_args(args: Dict[str, Any]) -> None:
     args.cache_path = os.path.realpath(args.cache_path)
     args.rnn_bidirectional = bool(args.rnn_bidirectional)
 
+    if args.num_layers < 2:
+        args.rnn_layers_dropout = 0.0
+
     if args.run_id == "" and args.do_train:
         args.run_id = time.strftime("%Y-%m-%d-%H-%M-%S")
 

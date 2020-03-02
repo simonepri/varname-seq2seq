@@ -1,6 +1,7 @@
 #!/usr/group/env python3
 import argparse
 import os
+import logging
 from typing import *  # pylint: disable=W0401,W0614
 
 import torch
@@ -111,6 +112,8 @@ def main(args: Dict[str, Any]) -> None:
 
 if __name__ == "__main__":
     try:
+        logging.basicConfig(level=logging.NOTSET)
+
         ARGS = parse_args()
 
         normalize_args(ARGS)

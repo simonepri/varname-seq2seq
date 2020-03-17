@@ -16,6 +16,7 @@ def parse_args() -> Dict[str, Any]:
     parser.add_argument("--input-path", type=str, default="data/corpora")
     parser.add_argument("--output-path", type=str, default="data/examples")
     parser.add_argument("--cache-only", default=False, action="store_true")
+    parser.add_argument("--language", type=str)
 
     return parser.parse_args()
 
@@ -35,6 +36,8 @@ def validate_args(args: Dict[str, Any]) -> None:
             raise ValueError(
                 "The output path is not empty: %s" % args.output_path
             )
+    if args.language not in ["java"]:
+        raise ValueError("Language not supported: %s" % args.language)
 
 
 def normalize_args(args: Dict[str, Any]) -> None:
@@ -42,7 +45,7 @@ def normalize_args(args: Dict[str, Any]) -> None:
     args.output_path = os.path.realpath(args.output_path)
 
 
-def main(args: Dict[str, Any]) -> None:
+def main_java(args: Dict[str, Any]) -> None:
     JavaAst.setup()
 
     pattern = re.compile(r".*\.java$")
@@ -68,6 +71,11 @@ def main(args: Dict[str, Any]) -> None:
             out_file = file + ".eg.tsv"
             out_file_path = os.path.join(out_path, out_file)
             VarExample.serialize_to_file(out_file_path, examples)
+
+
+def main(args: Dict[str, Any]) -> None:
+    if args.language == "java":
+        main_java(args)
 
 
 if __name__ == "__main__":

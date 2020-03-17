@@ -12,6 +12,7 @@ def parse_args() -> Dict[str, Any]:
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--data-path", type=str, default="data/corpora")
+    parser.add_argument("--language", type=str)
 
     return parser.parse_args()
 
@@ -25,13 +26,15 @@ def validate_args(args: Dict[str, Any]) -> None:
         raise ValueError(
             "The data path provided is not a folder: %s" % args.data_path
         )
+    if args.language not in ["java"]:
+        raise ValueError("Language not supported: %s" % args.language)
 
 
 def normalize_args(args: Dict[str, Any]) -> None:
     args.data_path = os.path.realpath(args.data_path)
 
 
-def main(args: Dict[str, Any]) -> None:
+def main_java(args: Dict[str, Any]) -> None:
     JavaAst.setup()
 
     pattern = re.compile(r".*\.java$")
@@ -42,6 +45,11 @@ def main(args: Dict[str, Any]) -> None:
         except IOError as err:
             print(flush=True, end="")
             print(err, flush=True)
+
+
+def main(args: Dict[str, Any]) -> None:
+    if args.language == "java":
+        main_java(args)
 
 
 if __name__ == "__main__":

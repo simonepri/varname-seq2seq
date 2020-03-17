@@ -2,6 +2,7 @@
 import argparse
 import os
 import re
+from distutils.util import strtobool
 from typing import *  # pylint: disable=W0401,W0614
 
 from features.examples import VarExample, MaskedVarExample
@@ -14,7 +15,7 @@ def parse_args() -> Dict[str, Any]:
 
     parser.add_argument("--input-path", type=str, default="data/examples")
     parser.add_argument("--output-path", type=str, default="data/masked")
-    parser.add_argument("--obfuscate", default=False, action="store_true")
+    parser.add_argument("--obfuscate", type=strtobool, default=False)
 
     return parser.parse_args()
 

@@ -72,8 +72,8 @@ public class Test { Test ( int a ) { int b = a ; } }
 From this, we can extract two naming examples, one in which we mask all the occurrences of the variable `a`, and one in which we do the same but for the variable `b`.
 
 ```java
-public class Test { Test ( int <mask> ) } int <var2> = <mask> ; } }
-public class Test { Test ( int <var1> ) } int <mask> = <var1> ; } }
+public class Test { Test ( int <mask> ) { int <var2> = <mask> ; } }
+public class Test { Test ( int <var1> ) { int <mask> = <var1> ; } }
 ```
 
 All these examples are divided into four splits.

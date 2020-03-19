@@ -37,9 +37,9 @@ def main(
     os.makedirs(args.data_path, exist_ok=True)
 
     remote_path = (
-        "https://github.com/simonepri/varname-transformers"
-        + "/releases/download/0.0.1/"
-        + args.file_name
+        "https://github.com/simonepri/varname-seq2seq"
+        + "/releases/latest/download"
+        + "/" + args.file_name
     )
     destination_path = os.path.join(args.data_path, args.file_name)
     with ByteProgress(desc=remote_path.split("/")[-1]) as pbar:

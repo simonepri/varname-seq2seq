@@ -39,8 +39,9 @@ def main(
     args: Dict[str, Any]
 ) -> Iterable[Tuple[Tuple[str, List[str]], Tuple[str, List[str]]]]:
     remote_path = (
-        "https://github.com/simonepri/varname-transformers"
-        + "/releases/download/0.0.1/corpora-ast-cache.tgz"
+        "https://github.com/simonepri/varname-seq2seq"
+        + "/releases/latest/download"
+        + "/java-corpora-ast-cache.tgz"
     )
     destination_path = os.path.join(
         JavaAst.AST_PROTO_DIR, "corpora-ast-cache.tgz"

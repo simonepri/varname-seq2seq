@@ -20,7 +20,14 @@
 
 varname-seq2seq is a source code sequence-to-sequence model that allows to train models to perform source code variable naming for virtually any programming language.
 
+The image below shows an example of input for the model and the respective output produced.  
 You can try a demo of this model for Java [using this Colab notebook][colab:demo-java].
+
+<p align="center">
+  <a href="#">
+    <img height="350" src="https://user-images.githubusercontent.com/3505087/77019200-e6a7c200-6977-11ea-9b96-e51824ddcb62.png" alt="model" />
+  </a>
+</p>
 
 
 ## Variable Naming

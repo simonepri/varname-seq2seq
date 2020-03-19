@@ -109,7 +109,7 @@ The image below shows a pictorial representation of the encoder-decoder model.
 
 ### Pre-trained models
 
-We distribute the pre-trained models showed in the table below.
+We distribute the pre-trained models showed in the table below.  
 If you want to train the model on a different dataset, you can do so by using [this Colab notebook][colab:model].
 
 | Name | Language | Download |
